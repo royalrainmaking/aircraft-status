@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airplane Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- โหลด leaflet.css -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <div id="map"></div>
+    <div id="sidebar">
+        <div id="sidebar-content"></div>
+    </div>
+    
+    <div id="aircraftListWrapper">
+        <div id="aircraftListContainer">
+            <div id="statusSummary">
+                <p>
+                    ใช้งานได้
+                    <span class="green"></span>
+                </p>
+                <p>
+                    ใช้งานไม่ได้
+                    <span class="red"></span>
+                </p>
+            </div>
+            <div class="search-wrapper">
+                <input type="text" id="missionBaseFilter" placeholder="ค้นหา">
+                <button id="clearSearchBtn" class="clear-btn">×</button>
+            </div>
+            <button id="toggleListBtn" class="toggle-btn">▼ เปิดรายการเครื่องบิน</button>
+            <ul id="aircraftList" class="aircraft-list" style="display:none;">
+                <!-- รายการเครื่องบินจะถูกเพิ่มที่นี่ -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- โหลด leaflet.js ก่อน script ของคุณ -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- โหลด script.js และ flightConfig.js -->
+    <script src="flightConfig.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>

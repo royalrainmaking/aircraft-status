@@ -1,0 +1,390 @@
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&family=Rajdhani:wght@400;600;700&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Kanit', 'Rajdhani', sans-serif;
+    overflow-y: auto; /* เปิดแถบเลื่อนแนวตั้ง */
+    overflow-x: hidden; /* ปิดแถบเลื่อนแนวนอน */
+}
+
+/* เพิ่ม Meta Viewport เพื่อให้เหมาะสมกับมือถือ */
+#map {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    z-index: 1;
+}
+
+/* Popup ปรับให้ดูสะอาดขึ้น */
+#sidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 260px; /* ขนาด sidebar */
+    height: 100%;
+    background: white;
+    box-shadow: -3px 0px 15px rgba(0, 0, 0, 0.3);
+    display: none;  /* ซ่อน sidebar */
+    padding: 20px;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+/* Popup title */
+.popup-title {
+    font-size: 16px; /* ปรับหัวข้อให้เล็กลงนิดหน่อย */
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+/* ปรับ sidebar */
+#sidebar {
+    width: 260px;  /* ลดจาก 300px เป็น 260px */
+    padding: 15px; /* ลดระยะห่างภายใน */
+    font-size: 14px; /* ลดขนาดตัวอักษรเล็กน้อย */
+}
+
+/* ปรับภาพเครื่องบินให้ดูสวยขึ้น */
+.airplane-image {
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+}
+
+/* สถานะเด่นขึ้น */
+.status-box {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    color: white;
+}
+
+.status-available {
+    background: #28a745; /* สีเขียว */
+}
+
+.status-unavailable {
+    background: #dc3545; /* สีแดง */
+}
+
+/* ปรับปุ่มปิด */
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #666;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.close-btn:hover {
+    color: red;
+}
+
+/* ปรับให้ข้อมูลดูอ่านง่ายขึ้น */
+.sidebar-content p {
+    font-size: 14px;
+    margin-bottom: 8px;
+    line-height: 1.5;
+    color: #444;
+}
+
+.sidebar-content h3 {
+    font-size: 16px;
+    margin-top: 15px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+    color: #007bff;
+}
+
+/* Styling for the status bar */
+.status-bar {
+    width: 100%;
+    padding: 20px 0;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 24px; /* Make text larger */
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Styling for the status text */
+.status-text {
+    display: inline-block;
+    padding: 10px 25px; /* Make padding larger */
+    border-radius: 10px;
+    font-size: 18px; /* Make text even larger */
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background-color: transparent;
+    color: white;
+}
+
+/* Optional: Styling for the close button */
+.close-btn {
+    background-color: transparent;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #333;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.close-btn:hover {
+    color: #ff0000;
+}
+
+#aircraftListWrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999; /* ให้แสดงขึ้นมาเหนือส่วนที่อยู่ด้านหลัง */
+    width: 250px;
+    height: 100vh;
+    padding: 10px;
+    overflow-y: auto;
+    display: block;  /* ให้แสดงลิสต์เมื่อ sidebar หายไป */
+}
+
+#aircraftListContainer {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;  /* เพิ่มระยะห่างจาก #statusSummary */
+    padding: 10px;
+    overflow-y: auto;
+    max-height: 500px;
+    position: absolute;
+    top: 2px;
+    left: 120px;
+    transform: translateX(-50%);
+    width: 80%;
+    z-index: 0;  /* ทำให้ #aircraftListContainer อยู่ด้านหลัง */
+}
+
+#aircraftList {
+    max-height: 400px;  /* ปรับความสูงของรายการเครื่องบิน */
+    overflow-y: scroll;  /* ทำให้เลื่อนได้ แต่ไม่แสดงแถบเลื่อน */
+    scrollbar-width: none; /* สำหรับ Firefox ปิดแถบเลื่อน */
+}
+
+
+/* สำหรับปุ่ม toggle ให้ซ่อนหรือตัวเลือกให้ปรับแสดง */
+#toggleListBtn, #toggleSidebarBtn {
+    font-size: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#toggleSidebarBtn {
+    background-color: #00b100;
+    color: white;
+}
+
+#toggleListBtn {
+    background-color: #007bff;
+    color: white;
+}
+
+#aircraftList::-webkit-scrollbar {
+    display: none;  /* สำหรับ Chrome, Safari และ Edge ปิดแถบเลื่อน */
+}
+
+.uppercase-text {
+    text-transform: uppercase;  /* ทำให้ข้อความทั้งหมดเป็นตัวพิมพ์ใหญ่ */
+}
+
+#toggleListBtn {
+    background-color: #00b100;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    width: auto;  /* กำหนดให้ขนาดปุ่มคงที่ */
+    text-align: center;
+    margin-bottom: 10px; /* เพิ่มระยะห่างใต้ปุ่ม */
+}
+
+#toggleListBtn:hover {
+    background-color: #00b100;
+}
+
+/* สไตล์สำหรับลิสรายการ */
+.aircraft-list {
+    margin-top: 15px;
+    padding: 0;
+    list-style-type: none;
+    cursor: pointer; /* เปลี่ยนเคอร์เซอร์เป็นลูกศร */
+}
+
+.aircraft-item {
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.status-icon {
+    margin-right: 10px; /* ให้ช่องว่างระหว่าง emoji กับชื่อเครื่องบิน */
+    font-size: 16px; /* ขนาดของ emoji */
+}
+
+.status-icon.green {
+    color: green;
+}
+
+.status-icon.red {
+    color: red;
+}
+
+.aircraft-item:hover {
+    background-color: #f0f0f0; /* เมื่อเอาเมาส์ไป hover เครื่องบิน */
+    border-radius: 5px;
+}
+
+/* เพิ่ม Meta Viewport */
+@viewport {
+    width: device-width;
+    initial-scale: 1.0;
+}
+
+/* Mobile responsive adjustments */
+@media screen and (max-width: 768px) {
+    #sidebar {
+        width: 56%;  /* ลดขนาด sidebar ลงเหลือ 56% ของหน้าจอ */
+        padding: 15px;  /* ลด padding ของ sidebar */
+        font-size: 14px; /* ลดขนาดฟอนต์ */
+    }
+
+    #aircraftListContainer {
+        width: 30%;  /* ลดขนาด list ลงจากเดิม 50% เป็น 30% */
+        top: -6%; /* ให้รายการไม่ติดกับด้านบน */
+        left: 17%;  /* ชิดขวาบน */
+        position: fixed;  /* ให้ลิสแสดงคงที่ */
+        font-size: 10px;  /* ลดขนาดฟอนต์ของรายการเครื่องบิน */
+        padding: 8px; /* ลด padding ภายใน */
+    }
+
+    #statusSummary {
+        font-size: 12px;  /* ลดขนาดฟอนต์ใน mobile */
+    }
+
+    .aircraft-item {
+        font-size: 8px; /* ขนาดฟอนต์ของรายการเครื่องบินในมือถือ */
+        padding: 6px; /* ลด padding ของรายการ */
+    }
+
+    #toggleListBtn {
+        font-size: 12px;  /* ลดขนาดฟอนต์ปุ่ม */
+        padding: 6px 12px; /* ลดขนาด padding ปุ่ม */
+    }
+
+    .aircraft-list {
+        font-size: 8px; /* ขนาดฟอนต์ของลิสต์เครื่องบิน */
+    }
+    #missionBaseFilter {
+        width: 100%;
+        max-width: none;
+        font-size: 14px;
+        padding: 8px;
+    }
+    
+}
+
+
+
+
+/* สำหรับหน้าจอที่ใหญ่กว่า 769px */
+@media screen and (min-width: 769px) {
+    #sidebar {
+        width: 260px;  /* คงขนาดเดิมของ sidebar */
+        padding: 15px;
+        font-size: 14px;
+    }
+
+    #aircraftListContainer {
+        width: 80%;  /* ให้ลิสรายการเครื่องบินอยู่ที่ 80% */
+        top: 50px;
+    }
+
+    .popup-title {
+        font-size: 16px;  /* ปรับขนาดหัวข้อใหญ่ขึ้น */
+    }
+
+    .aircraft-item {
+        font-size: 14px;  /* เพิ่มขนาดฟอนต์ให้เหมาะสม */
+    }
+}
+
+
+
+.search-wrapper {
+    position: relative;  /* ทำให้ตำแหน่งของปุ่มอยู่ภายในช่องค้นหา */
+    width: 100%; /* ช่องค้นหาจะครอบคลุมพื้นที่คอนเทนเนอร์ */
+    max-width: 250px; /* กำหนดความกว้างสูงสุด */
+    margin: 10px auto;
+}
+
+#missionBaseFilter {
+    width: 70%; /* ทำให้ช่องค้นหากว้างเต็มพื้นที่ */
+    padding: 10px;
+    font-size: 10px;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    outline: none;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-left: 12px; /* เพิ่ม margin-left เพื่อขยับไปทางขวา */
+}
+
+#missionBaseFilter:focus {
+    border-color: #0056b3;
+    box-shadow: 0px 0px 12px rgba(0, 123, 255, 0.6);
+}
+
+.clear-btn {
+    position: absolute;
+    right: 10px;  /* ชิดขวา */
+    top: 50%;
+    transform: translateY(-50%); /* กึ่งกลางแนวตั้ง */
+    font-size: 18px;  /* ขนาดกากบาท */
+    background-color: transparent;  /* ไม่มีพื้นหลัง */
+    color: #ff0000;  /* ใช้สีที่เข้ากับช่องค้นหา */
+    border: none;
+    cursor: pointer;
+    line-height: 20px;
+}
+
+.clear-btn:hover {
+    color: #f44336;  /* เปลี่ยนสีเมื่อ hover */
+}
+
+
