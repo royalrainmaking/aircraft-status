@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .instructions {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Favicon Generator</h1>
+    
+    <div class="instructions">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Choose a color for your favicon using the color picker</li>
+            <li>Click "Draw Airplane Icon" to create a simple airplane icon</li>
+            <li>Click "Download Favicon" to save the favicon.ico file</li>
+            <li>Place the downloaded favicon.ico file in your project's root directory</li>
+        </ol>
+    </div>
+    
+    <div>
+        <label for="iconColor">Choose icon color: </label>
+        <input type="color" id="iconColor" value="#0078D7">
+    </div>
+    <br>
+    
+    <canvas id="faviconCanvas" width="64" height="64"></canvas>
+    <br>
+    
+    <button id="drawButton">Draw Airplane Icon</button>
+    <button id="downloadButton">Download Favicon</button>
+    
+    <script>
+        const canvas = document.getElementById('faviconCanvas');
+        const ctx = canvas.getContext('2d');
+        const colorPicker = document.getElementById('iconColor');
+        const drawButton = document.getElementById('drawButton');
+        const downloadButton = document.getElementById('downloadButton');
+        
+        // Draw initial icon
+        drawAirplaneIcon();
+        
+        // Event listeners
+        drawButton.addEventListener('click', drawAirplaneIcon);
+        downloadButton.addEventListener('click', downloadFavicon);
+        colorPicker.addEventListener('change', drawAirplaneIcon);
+        
+        function drawAirplaneIcon() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Get selected color
+            const color = colorPicker.value;
+            
+            // Set fill color
+            ctx.fillStyle = color;
+            
+            // Draw a simple airplane shape
+            ctx.beginPath();
+            
+            // Airplane body
+            ctx.moveTo(32, 16);
+            ctx.lineTo(40, 32);
+            ctx.lineTo(32, 48);
+            ctx.lineTo(24, 32);
+            ctx.closePath();
+            
+            // Wings
+            ctx.moveTo(20, 28);
+            ctx.lineTo(44, 28);
+            ctx.lineTo(44, 36);
+            ctx.lineTo(20, 36);
+            ctx.closePath();
+            
+            // Tail
+            ctx.moveTo(28, 40);
+            ctx.lineTo(36, 40);
+            ctx.lineTo(36, 48);
+            ctx.lineTo(28, 48);
+            ctx.closePath();
+            
+            ctx.fill();
+        }
+        
+        function downloadFavicon() {
+            // Create a temporary link
+            const link = document.createElement('a');
+            link.download = 'favicon.ico';
+            
+            // Convert canvas to blob
+            canvas.toBlob(function(blob) {
+                link.href = URL.createObjectURL(blob);
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>

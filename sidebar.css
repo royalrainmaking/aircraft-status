@@ -1,0 +1,353 @@
+/* สไตล์สำหรับ Sidebar */
+#sidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 300px;
+    height: 100%;
+    background: var(--surface-1dp);
+    box-shadow: -2px 0px 15px rgba(0, 0, 0, 0.1);
+    display: none;
+    padding: 0;
+    z-index: 1000;
+    overflow-y: auto;
+    border-left: none;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateX(100%);
+    backdrop-filter: var(--blur-effect);
+    -webkit-backdrop-filter: var(--blur-effect);
+}
+
+#sidebar.active {
+    transform: translateX(0);
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+    z-index: 10;
+    box-shadow: none;
+    -webkit-appearance: none;
+    appearance: none;
+    backdrop-filter: var(--blur-effect);
+    -webkit-backdrop-filter: var(--blur-effect);
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* รูปภาพเครื่องบิน */
+.image-container {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+.airplane-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7));
+}
+
+.aircraft-title {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    color: white;
+    z-index: 2;
+}
+
+.aircraft-title h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+.aircraft-title span {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* สถานะ */
+.status-container {
+    padding: 15px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.status-badge.available {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status-badge.unavailable {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.status-badge i {
+    margin-right: 5px;
+}
+
+/* กราฟวงกลม */
+.maintenance-chart {
+    padding: 15px;
+    background-color: var(--surface-2dp);
+    margin: 15px;
+    border-radius: var(--card-radius);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.chart-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.chart-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.donut-chart {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: conic-gradient(
+        var(--color) 0% calc(var(--percentage) * 1%),
+        var(--surface-3dp) calc(var(--percentage) * 1%) 100%
+    );
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-center {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    background-color: var(--surface-2dp);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-center span {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.chart-center small {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.chart-info {
+    flex: 1;
+    margin-left: 15px;
+}
+
+.chart-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.detail-label {
+    color: var(--on-surface-medium);
+}
+
+.detail-value {
+    font-weight: 500;
+}
+
+/* ข้อมูลทั่วไป */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0 15px;
+    margin-bottom: 15px;
+}
+
+.info-card {
+    background-color: var(--surface-2dp);
+    border-radius: var(--card-radius);
+    padding: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.info-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.info-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 12px;
+    color: var(--on-surface-medium);
+    margin-bottom: 2px;
+}
+
+.info-value {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* ข้อมูลเครื่องยนต์ */
+.engine-section, .maintenance-section, .note-section {
+    padding: 15px;
+    margin: 0 15px 15px;
+    background-color: var(--surface-2dp);
+    border-radius: var(--card-radius);
+}
+
+.engine-section h3, .maintenance-section h3, .note-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.engine-section h3 i, .maintenance-section h3 i, .note-section h3 i {
+    margin-right: 8px;
+    color: var(--primary-color);
+}
+
+.engine-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.engine-card {
+    background-color: var(--surface-3dp);
+    border-radius: var(--button-radius);
+    padding: 10px;
+    text-align: center;
+}
+
+.engine-title {
+    font-size: 12px;
+    color: var(--on-surface-medium);
+    margin-bottom: 5px;
+}
+
+.engine-hours {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.engine-hours small {
+    font-size: 12px;
+    font-weight: normal;
+    opacity: 0.7;
+}
+
+.maintenance-manager {
+    font-size: 15px;
+    padding: 10px;
+    background-color: var(--surface-3dp);
+    border-radius: var(--button-radius);
+    text-align: center;
+}
+
+.note-content {
+    padding: 10px;
+    background-color: var(--surface-3dp);
+    border-radius: var(--button-radius);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+    #sidebar {
+        width: 85%;
+    }
+    
+    .donut-chart {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .chart-center {
+        width: 56px;
+        height: 56px;
+    }
+    
+    .chart-center span {
+        font-size: 16px;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}

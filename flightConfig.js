@@ -1,4 +1,4 @@
-const flightData = [
+let flightData = [
     {
         id: "KA350-001",
         name: "King Air 350",
