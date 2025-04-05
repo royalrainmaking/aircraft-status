@@ -1,0 +1,73 @@
+/* สไตล์สำหรับตัวเลือกวันที่ */
+.date-selector {
+    display: flex;
+    width: 100%;
+    margin-bottom: 10px;
+    gap: 8px;
+}
+
+#dateSelector {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid #d1d1d6;
+    background-color: #f2f2f7;
+    font-family: 'Prompt', 'Kanit', sans-serif;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.87);
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    box-shadow: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+#dateSelector:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.reset-date-btn {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: none;
+    background-color: #007aff;
+    color: white;
+    font-family: 'Prompt', 'Kanit', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.reset-date-btn:hover {
+    background-color: #0055d4;
+}
+
+/* ข้อความกำลังโหลด */
+.loading {
+    text-align: center;
+    padding: 15px;
+    color: rgba(0, 0, 0, 0.6);
+    font-style: italic;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
+
+
+/* สไตล์สำหรับมือถือ */
+@media (max-width: 768px) {
+    .date-selector {
+        flex-wrap: wrap;
+    }
+
+    #dateSelector, .reset-date-btn {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+}

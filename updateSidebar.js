@@ -67,22 +67,53 @@ window.updateSidebar = async function(flight) {
     }
 
     console.log("✅ maxHours:", maxHours);
-    const remainingAcheck = parseFloat(flight.aCheck) || 0;
-    let aCheckPercentage = ((maxHours - remainingAcheck) / maxHours) * 100; // คำนวณเปอร์เซ็นต์
+
+    // ดึงค่า aCheck และ remainingHours
+    const aCheckValue = parseFloat(flight.aCheck) || 0;
+    const remainingHoursValue = parseFloat(flight.remainingHours) || 0;
+
+    // คำนวณชั่วโมงคงเหลือ (aCheck - remainingHours)
+    let remainingHours = 0;
+    if (flight.aCheckDue) {
+        // ถ้ามีค่า aCheckDue ให้ใช้ค่านี้เลย
+        remainingHours = parseFloat(flight.aCheckDue) || 0;
+    } else {
+        // ถ้าไม่มี ให้คำนวณจาก aCheck - remainingHours
+        remainingHours = Math.max(0, aCheckValue - remainingHoursValue);
+    }
+
+    console.log("✅ ข้อมูลการคำนวณ:", {
+        aCheck: aCheckValue,
+        remainingHours: remainingHoursValue,
+        คงเหลือ: remainingHours
+    });
+
+    // คำนวณเปอร์เซ็นต์ความคืบหน้า (แก้ไขการคำนวณ)
+    let aCheckPercentage = (remainingHours / maxHours) * 100;
+
+    // เปอร์เซ็นต์ที่แสดงในหน้าเว็บ (100 - aCheckPercentage)
+    let displayPercentage = 100 - aCheckPercentage;
 
     // ถ้าเปอร์เซ็นต์ติดลบ ให้ตั้งเป็น 0%
-    if (aCheckPercentage < 0) {
-        aCheckPercentage = 0;
+    if (displayPercentage < 0) {
+        displayPercentage = 0;
     }
 
     // ตรวจสอบไม่ให้เปอร์เซ็นต์เกิน 100
-    if (aCheckPercentage > 100) {
-        aCheckPercentage = 100;
+    if (displayPercentage > 100) {
+        displayPercentage = 100;
     }
+
+    console.log("✅ การคำนวณเปอร์เซ็นต์:", {
+        maxHours: maxHours,
+        remainingHours: remainingHours,
+        aCheckPercentage: aCheckPercentage,
+        displayPercentage: displayPercentage
+    });
 
     // กำหนดสีของหลอดตามเปอร์เซ็นต์
     let barColor = 'var(--success-color)';  // สีเขียว (ดี)
-    if (aCheckPercentage > 70) {
+    if (aCheckPercentage < 30) {
         barColor = 'var(--danger-color)';  // สีแดง (แย่)
     }
 
@@ -116,12 +147,12 @@ window.updateSidebar = async function(flight) {
         <div class="maintenance-chart">
             <div class="chart-header">
                 <h3>สถานะการซ่อมบำรุง</h3>
-                <span class="chart-value">${aCheckPercentage.toFixed(1)}%</span>
+                <span class="chart-value">ครบซ่อม${aCheckValue} / ${maxHours} ชม. (${aCheckPercentage.toFixed(1)}%)</span>
             </div>
             <div class="chart-container">
-                <div class="donut-chart" style="--percentage: ${aCheckPercentage}; --color: ${barColor};">
+                <div class="donut-chart" style="--percentage: ${displayPercentage}; --color: ${barColor};">
                     <div class="chart-center">
-                        <span>${flight.aCheck}</span>
+                        <span>${remainingHours.toFixed(1)}</span>
                         <small>ชม.</small>
                     </div>
                 </div>
@@ -132,7 +163,7 @@ window.updateSidebar = async function(flight) {
                     </div>
                     <div class="chart-detail">
                         <span class="detail-label">คงเหลือ:</span>
-                        <span class="detail-value">${(maxHours - parseFloat(flight.aCheck)).toFixed(1)} ชม.</span>
+                        <span class="detail-value">${remainingHours.toFixed(1)} ชม.</span>
                     </div>
                 </div>
             </div>
@@ -160,6 +191,17 @@ window.updateSidebar = async function(flight) {
             </div>
         </div>
 
+        ${flight.type === 'helicopter' ? `
+        <div class="engine-section">
+            <h3><i class="fas fa-helicopter"></i> ชั่วโมงบินเฮลิคอปเตอร์</h3>
+            <div class="flight-hours">
+                <div class="info-card-content">
+                    <div class="info-value">${flight.remainingHours}</div>
+                    <div class="info-label">ชั่วโมงบินทั้งหมด</div>
+                </div>
+            </div>
+        </div>
+        ` : `
         <div class="engine-section">
             <h3><i class="fas fa-cogs"></i> เครื่องยนต์</h3>
             <div class="engine-grid">
@@ -173,6 +215,7 @@ window.updateSidebar = async function(flight) {
                 </div>
             </div>
         </div>
+        `}
 
         <div class="maintenance-section">
             <h3><i class="fas fa-user-cog"></i> ผู้ควบคุมงานช่าง</h3>

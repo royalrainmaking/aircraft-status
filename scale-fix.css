@@ -1,0 +1,321 @@
+/*
+ * scale-fix.css
+ * ไฟล์นี้ใช้สำหรับปรับขนาดองค์ประกอบต่างๆ ให้เล็กลงเพื่อให้เหมาะกับหน้าจอขนาด 14 นิ้ว
+ * โดยยังคง layout เดิมไว้
+ *
+ * วิธีการปรับแต่ง:
+ * 1. ถ้าต้องการลดขนาดลงมากกว่านี้ ให้ปรับค่า font-size ในแท็ก html ให้น้อยลง เช่น 85% หรือ 80%
+ * 2. ถ้าต้องการเพิ่มขนาด ให้ปรับค่า font-size ในแท็ก html ให้มากขึ้น เช่น 95% หรือ 100%
+ * 3. สามารถปรับแต่งขนาดองค์ประกอบเฉพาะได้โดยแก้ไขค่าในส่วนต่างๆ ด้านล่าง
+ *
+ * หมายเหตุ: การปรับแต่งทั้งหมดจะมีผลเฉพาะบนหน้าจอที่ไม่ใช่มือถือ (ขนาดใหญ่กว่า 768px) เท่านั้น
+ */
+
+/* ปรับขนาดฟอนต์และองค์ประกอบทั้งหมดให้เล็กลง 10% - เฉพาะบนหน้าจอที่ไม่ใช่มือถือ */
+@media screen and (min-width: 769px) {
+    html {
+        font-size: 90%; /* ลดขนาดฟอนต์พื้นฐานลง 10% */
+    }
+
+    /* ปรับขนาดองค์ประกอบหลัก */
+    #sidebar {
+        width: 250px; /* ลดขนาดลงจาก 280px */
+        padding: 15px; /* ลดขนาดลงจาก 20px */
+    }
+
+    .popup-title {
+        font-size: 16px; /* ลดขนาดลงจาก 18px */
+    }
+
+    /* ปรับขนาดรายการเครื่องบิน */
+    #aircraftListWrapper {
+        width: 270px; /* ลดขนาดลงจาก 300px */
+    }
+
+    #aircraftListContainer {
+        padding: 15px; /* ลดขนาดลงจาก 20px */
+        margin-top: 15px; /* ลดขนาดลงจาก 20px */
+        max-height: 90vh; /* เพิ่มความสูงสูงสุดเป็น 90% ของความสูงหน้าจอ */
+    }
+
+    /* ขยายช่องลิสรายการเครื่องบินให้ยาวลง */
+    #aircraftList {
+        max-height: 70vh; /* เพิ่มความสูงเป็น 70% ของความสูงหน้าจอ */
+        overflow-y: auto;
+        margin-top: 10px;
+        padding: 10px;
+    }
+
+    .aircraft-item {
+        padding: 8px 10px; /* ลดขนาดลงจาก 10px 12px */
+        margin-bottom: 6px; /* ลดขนาดลงจาก 8px */
+        font-size: 12px; /* ลดขนาดลงจาก 14px */
+    }
+
+    /* ปรับขนาดมาร์กเกอร์บนแผนที่ */
+    .marker-container {
+        width: 36px; /* ลดขนาดลงจาก 40px */
+        height: 36px; /* ลดขนาดลงจาก 40px */
+    }
+
+    .marker-status {
+        width: 24px; /* ลดขนาดลงจาก 28px */
+        height: 24px; /* ลดขนาดลงจาก 28px */
+    }
+
+    .marker-image {
+        width: 20px; /* ลดขนาดลงจาก 24px */
+        height: 20px; /* ลดขนาดลงจาก 24px */
+    }
+
+    /* ปรับขนาดการ์ดข้อมูล */
+    .info-card {
+        margin-bottom: 12px; /* ลดขนาดลงจาก 15px */
+    }
+
+    .info-card-header {
+        padding: 8px 10px; /* ลดขนาดลงจาก 10px 12px */
+    }
+
+    .info-card-header i {
+        font-size: 16px; /* ลดขนาดลงจาก 18px */
+    }
+
+    .info-card-header h3 {
+        font-size: 14px; /* ลดขนาดลงจาก 15px */
+    }
+
+    .info-card-content {
+        padding: 10px; /* ลดขนาดลงจาก 12px */
+    }
+
+    .info-value {
+        font-size: 14px; /* ลดขนาดลงจาก 15px */
+    }
+
+    .flight-hours .info-value {
+        font-size: 26px; /* ลดขนาดลงจาก 30px */
+    }
+
+    /* ปรับขนาดป้ายสถานะ */
+    .status-badge {
+        padding: 5px 10px; /* ลดขนาดลงจาก 6px 12px */
+        font-size: 12px; /* ลดขนาดลงจาก 13px */
+    }
+
+    .status-badge i {
+        font-size: 14px; /* ลดขนาดลงจาก 16px */
+    }
+
+    /* ปรับขนาดปุ่มต่างๆ */
+    .close-btn {
+        width: 24px; /* ลดขนาดลงจาก 26px */
+        height: 24px; /* ลดขนาดลงจาก 26px */
+    }
+
+    .close-btn i {
+        font-size: 14px; /* ลดขนาดลงจาก 16px */
+    }
+
+    /* ปรับขนาดช่องค้นหา */
+    .search-wrapper {
+        max-width: 100%; /* ใช้ความกว้างเต็ม */
+        width: 100%;
+        margin: 10px auto; /* ลดขนาดลงจาก 15px */
+        box-sizing: border-box;
+    }
+
+    #missionBaseFilter {
+        padding: 8px 30px 8px 30px; /* ลดขนาดลงจาก 12px 40px 12px 40px */
+        font-size: 12px; /* ลดขนาดลงจาก 14px */
+        height: 32px; /* กำหนดความสูงให้เล็กลง */
+        border-radius: 8px; /* ลดความโค้งลง */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* ซ่อนปุ่มรีเฟรชและปุ่มเปิดปิดรายการเครื่องบิน */
+    .refresh-btn, #toggleListBtn {
+        display: none !important;
+    }
+
+    /* ซ่อนกลุ่มปุ่ม */
+    .button-group {
+        display: none !important;
+    }
+
+    /* ลดขนาดช่องวันที่และปุ่มวันล่าสุด */
+    .date-selector {
+        margin-bottom: 8px; /* ลดขนาดลงจาก 10px */
+        gap: 5px; /* ลดขนาดลงจาก 8px */
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+    }
+
+    #dateSelector {
+        padding: 6px 8px; /* ลดขนาดลงจาก 8px 12px */
+        font-size: 12px; /* ลดขนาดลงจาก 14px */
+        height: 30px; /* กำหนดความสูงให้เล็กลง */
+        border-radius: 8px; /* ลดความโค้งลง */
+        flex: 1;
+        box-sizing: border-box;
+    }
+
+    .reset-date-btn {
+        padding: 6px 8px; /* ลดขนาดลงจาก 8px 12px */
+        font-size: 12px; /* ลดขนาดลงจาก 14px */
+        height: 30px; /* กำหนดความสูงให้เล็กลง */
+        border-radius: 8px; /* ลดความโค้งลง */
+        min-width: 50px; /* กำหนดความกว้างขั้นต่ำ */
+        white-space: nowrap;
+    }
+
+    /* ปรับขนาดแถบสถานะ */
+    .status-bar {
+        padding: 15px 0; /* ลดขนาดลงจาก 20px 0 */
+        font-size: 20px; /* ลดขนาดลงจาก 24px */
+    }
+
+    .status-text {
+        padding: 8px 20px; /* ลดขนาดลงจาก 10px 25px */
+        font-size: 16px; /* ลดขนาดลงจาก 18px */
+    }
+
+    /* ปรับขนาดแถบความคืบหน้า */
+    .progress-container {
+        height: 14px; /* ลดขนาดลงจาก 16px */
+    }
+
+    .progress-text {
+        font-size: 10px; /* ลดขนาดลงจาก 11px */
+    }
+
+    /* ปรับขนาดกล่องหมายเหตุ */
+    .note-box {
+        padding: 10px; /* ลดขนาดลงจาก 12px */
+        font-size: 13px; /* ลดขนาดลงจาก 14px */
+    }
+
+    /* ปรับขนาดป้ายประเภทเครื่องบิน */
+    .aircraft-type-badge {
+        padding: 5px 10px; /* ลดขนาดลงจาก 6px 12px */
+        font-size: 11px; /* ลดขนาดลงจาก 12px */
+    }
+
+    /* ปรับขนาดโอเวอร์เลย์รูปภาพ */
+    .image-overlay {
+        padding: 12px; /* ลดขนาดลงจาก 15px */
+    }
+
+    /* ปรับขนาดตัวเลขเครื่องบิน */
+    .aircraft-number {
+        font-size: 1.1em; /* ลดขนาดลงจาก 1.2em */
+    }
+
+    /* ปรับตัวแสดงสถานะใหม่ให้ดูน่าสนใจและสมดุล */
+    #statusSummary {
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(240,240,240,0.8));
+        border-radius: 10px;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+
+    #statusSummary p {
+        padding: 8px;
+        margin: 0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #statusSummary p:first-child {
+        margin-bottom: 6px;
+        background: rgba(52, 199, 89, 0.1);
+        border: 1px solid rgba(52, 199, 89, 0.2);
+        color: #2a9d4a;
+    }
+
+    #statusSummary p:last-child {
+        background: rgba(255, 59, 48, 0.1);
+        border: 1px solid rgba(255, 59, 48, 0.2);
+        color: #d93b30;
+    }
+
+    .status-icon-text {
+        font-size: 12px;
+    }
+
+    #statusSummary .count-text {
+        margin: 0 5px;
+    }
+
+    #statusSummary .green, #statusSummary .red {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    #statusSummary .green {
+        background-color: #34c759;
+        color: white;
+    }
+
+    #statusSummary .red {
+        background-color: #ff3b30;
+        color: white;
+    }
+
+    #statusSummary .green:after, #statusSummary .red:after {
+        font-size: 11px;
+    }
+
+    #statusSummary p:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    /* ปรับขนาดข้อความผลการค้นหา */
+    .search-result-count {
+        font-size: 11px; /* ลดขนาดลงจาก 12px */
+    }
+
+    #noResultsMessage {
+        padding: 12px; /* ลดขนาดลงจาก 15px */
+    }
+
+    /* ปรับขนาดปุ่มล้างการค้นหา */
+    .clear-btn {
+        width: 18px; /* ลดขนาดลงจาก 22px */
+        height: 18px; /* ลดขนาดลงจาก 22px */
+        font-size: 12px; /* ลดขนาดลงจาก 16px */
+        right: 8px; /* ลดระยะห่างจากขอบขวา */
+    }
+
+    /* ปรับขนาดกริดเครื่องยนต์ */
+    .engine-grid {
+        gap: 8px; /* ลดขนาดลงจาก 10px */
+    }
+
+    /* ปรับขนาดป้ายข้อมูล */
+    .info-label {
+        font-size: 11px; /* ลดขนาดลงจาก 12px */
+    }
+}

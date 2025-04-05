@@ -1,0 +1,90 @@
+/* 
+ * Forced Colors Mode CSS
+ * ใช้แทน -ms-high-contrast ที่กำลังจะถูกยกเลิกการใช้งาน
+ * อ้างอิง: https://developer.mozilla.org/en-US/docs/Web/CSS/@media/forced-colors
+ */
+
+@media (forced-colors: active) {
+  /* ปรับแต่งสีสำหรับ Forced Colors Mode */
+  
+  /* ปรับแต่งสีพื้นหลังและข้อความ */
+  body {
+    forced-color-adjust: none;
+  }
+  
+  /* ปรับแต่งสีของปุ่ม */
+  button, 
+  .button-ripple,
+  .reset-date-btn,
+  #mobileListToggle {
+    forced-color-adjust: none;
+    background-color: ButtonFace;
+    color: ButtonText;
+    border-color: ButtonBorder;
+  }
+  
+  button:hover,
+  .button-ripple:hover,
+  .reset-date-btn:hover,
+  #mobileListToggle:hover {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+  
+  /* ปรับแต่งสีของลิงก์ */
+  a {
+    color: LinkText;
+  }
+  
+  a:hover {
+    color: HighlightText;
+    background-color: Highlight;
+  }
+  
+  /* ปรับแต่งสีของรายการเครื่องบิน */
+  .aircraft-item {
+    forced-color-adjust: none;
+    background-color: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+  
+  .aircraft-item.active {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+  
+  /* ปรับแต่งสีของสถานะ */
+  .status-icon.green {
+    background-color: Mark;
+  }
+  
+  .status-icon.red {
+    background-color: LinkText;
+  }
+  
+  /* ปรับแต่งสีของ input */
+  input, select {
+    background-color: Field;
+    color: FieldText;
+    border-color: FieldText;
+  }
+  
+  /* ปรับแต่งสีของ sidebar */
+  #sidebar {
+    background-color: Canvas;
+    color: CanvasText;
+  }
+  
+  /* ปรับแต่งสีของการ์ด */
+  .info-card {
+    background-color: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+  
+  .info-card-header {
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+}

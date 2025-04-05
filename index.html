@@ -6,6 +6,9 @@
     <title>Airplane Tracker</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile.css">
+    <link rel="stylesheet" href="date-selector.css">
+    <link rel="stylesheet" href="forced-colors.css">
+    <link rel="stylesheet" href="scale-fix.css"><!-- ไฟล์ CSS สำหรับปรับขนาดให้เหมาะกับหน้าจอ 14 นิ้ว -->
     <!-- โหลด leaflet.css -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
@@ -31,11 +34,11 @@
         <div id="aircraftListContainer">
             <div id="statusSummary">
                 <p>
-                    ✅ ใช้งานได้ <span class="count-text">(0)</span>
+                    <span>✅ ใช้งานได้ <span class="count-text">(0)</span></span>
                     <span class="green" data-count="0"></span>
                 </p>
                 <p>
-                    ❌ ใช้งานไม่ได้ <span class="count-text">(0)</span>
+                    <span>❌ ใช้งานไม่ได้ <span class="count-text">(0)</span></span>
                     <span class="red" data-count="0"></span>
                 </p>
             </div>
@@ -43,10 +46,11 @@
                 <input type="text" id="missionBaseFilter" placeholder="ค้นหาเครื่องบิน, สถานะ, ฐานที่ตั้ง...">
                 <button id="clearSearchBtn" class="clear-btn">×</button>
             </div>
-            <div class="button-group">
-                <button id="toggleListBtn" class="toggle-btn">▼ เปิดรายการเครื่องบิน</button>
-                <button id="refreshDataBtn" class="refresh-btn button-ripple" title="รีเฟรชข้อมูล"><i class="fas fa-sync-alt"></i></button>
+            <div class="date-selector">
+                <input type="date" id="dateSelector" title="เลือกวันที่">
+                <button id="resetDateBtn" class="reset-date-btn" title="ดูข้อมูลวันนี้">วันนี้</button>
             </div>
+            <!-- ลบปุ่มเปิดปิดรายการเครื่องบินและปุ่มรีเฟรชออก -->
             <ul id="aircraftList" class="aircraft-list" style="display:block;">
                 <!-- รายการเครื่องบินจะถูกเพิ่มที่นี่ -->
             </ul>

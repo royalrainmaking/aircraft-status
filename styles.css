@@ -131,13 +131,24 @@ body, html {
 
 .marker-status {
     position: absolute;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    opacity: 0.2;
-    top: 0;
-    left: 6px;
+    top: -2px;
+    left: 4px;
     z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    border: 2px solid white;
+}
+
+.marker-status-icon {
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .marker-image {
@@ -146,20 +157,32 @@ body, html {
     height: 24px;
     z-index: 2;
     margin-top: 2px;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+    transition: transform 0.3s ease;
+}
+
+.custom-icon:hover .marker-image {
+    transform: scale(1.1);
 }
 
 .marker-label {
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 1px 4px;
-    border-radius: 3px;
-    font-size: 8px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--on-surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
     font-weight: bold;
-    margin-top: 2px;
+    margin-top: 3px;
     white-space: nowrap;
     z-index: 2;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.custom-icon:hover .marker-label {
+    transform: scale(1.1);
+    background-color: white;
+    color: var(--primary-color);
 }
 
 /* Popup ปรับให้ดูสะอาดขึ้น */
@@ -257,19 +280,60 @@ body, html {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 12px; /* ลดขนาดลงจาก 8px 15px */
+    padding: 8px 16px;
     border-radius: 50px;
     color: white;
-    font-weight: 500;
-    font-size: 13px; /* ลดขนาดลงจาก 14px */
-    margin-top: 8px; /* ลดขนาดลงจาก 10px */
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1); /* ลดขนาดเงา */
-    transition: var(--transition);
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+    z-index: 1;
+}
+
+.status-badge:after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: skewX(-20deg);
+    left: -50px;
+    top: 0;
+    animation: shine 3s infinite;
+    z-index: 1;
+}
+
+@keyframes shine {
+    0% { left: -50px; }
+    20% { left: 150%; }
+    100% { left: 150%; }
 }
 
 .status-badge i {
-    margin-right: 8px;
-    font-size: 16px;
+    margin-right: 10px;
+    font-size: 18px;
+    position: relative;
+    z-index: 2;
+}
+
+.status-badge:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .status-available {
@@ -937,18 +1001,143 @@ body, html {
         font-size: 14px;
     }
 
-    .aircraft-item {
-        font-size: 8px; /* ขนาดฟอนต์ของรายการเครื่องบินในมือถือ */
-        padding: 6px; /* ลด padding ของรายการ */
+    /* สไตล์สำหรับไอคอนสถานะในรายการเครื่องบิน */
+    .status-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        position: relative;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
     }
 
+    .status-icon:before {
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        font-size: 12px;
+        color: white;
+    }
+
+    .status-icon.green {
+        background-color: var(--success-color);
+    }
+
+    .status-icon.green:before {
+        content: '\f00c'; /* Font Awesome check icon */
+    }
+
+    .status-icon.red {
+        background-color: var(--danger-color);
+    }
+
+    .status-icon.red:before {
+        content: '\f00d'; /* Font Awesome times icon */
+    }
+
+    /* เพิ่มเอฟเฟกต์เรืองแสงเมื่อ hover */
+    .status-icon.green:hover {
+        box-shadow: 0 0 12px var(--success-color);
+        transform: scale(1.1);
+    }
+
+    .status-icon.red:hover {
+        box-shadow: 0 0 12px var(--danger-color);
+        transform: scale(1.1);
+    }
+
+    /* ปรับขนาดสำหรับมือถือ */
+    @media screen and (max-width: 768px) {
+        .status-icon {
+            width: 28px;
+            height: 28px;
+        }
+
+        .status-icon:before {
+            font-size: 14px;
+        }
+    }
+
+    .aircraft-item {
+        font-size: 14px; /* ปรับขนาดฟอนต์ให้ใหญ่ขึ้น */
+        padding: 10px 12px; /* เพิ่ม padding ให้มากขึ้น */
+        margin-bottom: 8px; /* เพิ่มระยะห่างระหว่างรายการ */
+        background-color: var(--surface-1dp);
+        border-radius: var(--button-radius);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: flex-start; /* เปลี่ยนจาก center เป็น flex-start เพื่อให้จัดเรียงจากด้านบน */
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .aircraft-item:hover {
+        background-color: var(--surface-2dp);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .aircraft-item.active {
+        background-color: rgba(0, 122, 255, 0.1);
+        border-left: 3px solid var(--primary-color);
+    }
+
+    .aircraft-name {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+        padding-right: 5px;
+    }
+
+    .aircraft-info {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        line-height: 1.2;
+    }
+
+    .aircraft-name strong {
+        font-weight: 600;
+        display: inline;
+    }
+
+    .aircraft-number {
+        color: var(--on-surface-medium);
+        font-size: 0.9em;
+        margin-left: 5px;
+        display: inline;
+    }
+
+    /* ลบสไตล์ที่เกี่ยวข้องกับ progress bar */
+
     #toggleListBtn {
-        font-size: 12px;  /* ลดขนาดฟอนต์ปุ่ม */
-        padding: 6px 12px; /* ลดขนาด padding ปุ่ม */
+        font-size: 14px;  /* ปรับขนาดฟอนต์ปุ่ม */
+        padding: 8px 14px; /* ปรับขนาด padding ปุ่ม */
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--button-radius);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    #toggleListBtn:hover {
+        background-color: var(--primary-variant);
+        transform: translateY(-2px);
     }
 
     .aircraft-list {
-        font-size: 8px; /* ขนาดฟอนต์ของลิสต์เครื่องบิน */
+        font-size: 14px; /* ปรับขนาดฟอนต์ของลิสต์เครื่องบิน */
+        padding: 8px;
     }
 
     .search-wrapper {
