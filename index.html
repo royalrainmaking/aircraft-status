@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="date-selector.css">
     <link rel="stylesheet" href="forced-colors.css">
     <link rel="stylesheet" href="scale-fix.css"><!-- ไฟล์ CSS สำหรับปรับขนาดให้เหมาะกับหน้าจอ 14 นิ้ว -->
+    <link rel="stylesheet" href="status-summary.css"><!-- ไฟล์ CSS สำหรับส่วนสรุปสถานะ -->
     <!-- โหลด leaflet.css -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
@@ -34,12 +35,12 @@
         <div id="aircraftListContainer">
             <div id="statusSummary">
                 <p>
-                    <span>✅ ใช้งานได้ <span class="count-text">(0)</span></span>
-                    <span class="green" data-count="0"></span>
+                    <span class="status-icon-text full-width">✅ ใช้งานได้</span>
+                    <span class="count-badge green">0</span>
                 </p>
                 <p>
-                    <span>❌ ใช้งานไม่ได้ <span class="count-text">(0)</span></span>
-                    <span class="red" data-count="0"></span>
+                    <span class="status-icon-text full-width">❌ ใช้งานไม่ได้</span>
+                    <span class="count-badge red">0</span>
                 </p>
             </div>
             <div class="search-wrapper">
@@ -49,6 +50,17 @@
             <div class="date-selector">
                 <input type="date" id="dateSelector" title="เลือกวันที่">
                 <button id="resetDateBtn" class="reset-date-btn" title="ดูข้อมูลวันนี้">วันนี้</button>
+            </div>
+            <div class="aircraft-type-filter">
+                <button id="filterAll" class="filter-btn active" data-type="all">
+                    <i class="fas fa-globe"></i>
+                </button>
+                <button id="filterAircraft" class="filter-btn" data-type="aircraft">
+                    <i class="fas fa-plane"></i>
+                </button>
+                <button id="filterHelicopter" class="filter-btn" data-type="helicopter">
+                    <i class="fas fa-helicopter"></i>
+                </button>
             </div>
             <!-- ลบปุ่มเปิดปิดรายการเครื่องบินและปุ่มรีเฟรชออก -->
             <ul id="aircraftList" class="aircraft-list" style="display:block;">
@@ -64,6 +76,7 @@
     <script src="flightConfig.js"></script>
     <script src="updateSidebar.js"></script>
     <script src="script.js"></script>
+    <script src="fix_mobile_icons.js"></script>
 
 </body>
 </html>

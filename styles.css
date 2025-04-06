@@ -228,13 +228,13 @@ body, html {
     border-radius: 12px; /* ลดขนาดลงจาก 15px */
     overflow: hidden;
     margin-bottom: 15px; /* ลดขนาดลงจาก 20px */
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12); /* ลดขนาดเงา */
+    box-shadow: none; /* เอาเงาออก */
     transition: var(--transition);
 }
 
 .image-container:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: none; /* เอาเงาออก */
 }
 
 .airplane-image {
@@ -253,9 +253,9 @@ body, html {
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    background: none; /* เอาพื้นหลังสีดำออก */
     padding: 15px;
-    color: white;
+    color: var(--on-surface); /* เปลี่ยนสีข้อความเป็นสีปกติ */
 }
 
 .aircraft-type-badge {
@@ -268,11 +268,11 @@ body, html {
     position: absolute;
     top: 15px;
     left: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: none; /* เอาเงาออก */
     z-index: 5;
     opacity: 0.9;
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: none; /* เอา blur effect ออก */
+    -webkit-backdrop-filter: none; /* เอา blur effect ออก */
 }
 
 /* สถานะเด่นขึ้น */
@@ -802,6 +802,46 @@ body, html {
     height: 8px;
     border-radius: 50%;
     display: inline-block;
+    text-indent: -9999px; /* ซ่อนข้อความ */
+    overflow: hidden; /* ป้องกันการแสดงข้อความที่ซ่อน */
+    content: "" !important; /* ลบเนื้อหาภายใน */
+    vertical-align: middle; /* จัดให้อยู่กลางแนวตั้ง */
+}
+
+/* สไตล์ใหม่สำหรับ badge แสดงจำนวน */
+.count-badge {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.count-badge.green {
+    background-color: var(--success-color);
+}
+
+.count-badge.red {
+    background-color: var(--danger-color);
+}
+
+/* สไตล์สำหรับข้อความสถานะ */
+.status-icon-text {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+/* สำหรับโหมดเดสก์ท็อป ให้ข้อความเต็มความกว้าง */
+.status-icon-text.full-width {
+    flex: 1;
+    justify-content: flex-start;
+    font-weight: 500;
 }
 
 .status-icon.green {
@@ -904,6 +944,7 @@ body, html {
         max-width: 320px; /* จำกัดความกว้างสูงสุด */
     }
 
+    /* ในโหมดมือถือ ให้มีกล่องสถานะ */
     #statusSummary {
         background-color: var(--surface-2dp);
         border-radius: 12px;
@@ -932,6 +973,7 @@ body, html {
         }
     }
 
+    /* ในโหมดมือถือ ให้มีกล่องสถานะ */
     #statusSummary p {
         margin: 0;
         padding: 8px 12px;

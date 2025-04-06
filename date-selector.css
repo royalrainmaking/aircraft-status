@@ -43,6 +43,63 @@
     background-color: #0055d4;
 }
 
+/* ปุ่มกรองประเภทเครื่องบิน */
+.aircraft-type-filter {
+    display: flex;
+    width: 100%;
+    margin-bottom: 6px;
+    gap: 3px;
+    max-width: 120px; /* จำกัดความกว้างสูงสุด */
+}
+
+.filter-btn {
+    flex: 1;
+    padding: 4px;
+    background-color: #f2f2f7;
+    color: rgba(0, 0, 0, 0.87);
+    border: 1px solid #d1d1d6;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Prompt', 'Kanit', sans-serif;
+    font-size: 10px;
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    text-align: center;
+    aspect-ratio: 1/1; /* ทำให้ปุ่มเป็นสี่เหลี่ยมจัตุรัส */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    max-width: 32px;
+    height: 24px;
+}
+
+.filter-btn i {
+    font-size: 12px;
+}
+
+.filter-btn:hover {
+    background-color: #e5e5ea;
+}
+
+.filter-btn.active {
+    background-color: #007aff;
+    color: white;
+    border-color: #007aff;
+}
+
+/* ส่วนหัวข้อและกรอง */
+.filter-section {
+    margin-bottom: 10px;
+}
+
+.filter-header {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 4px;
+    padding-left: 2px;
+}
+
 /* ข้อความกำลังโหลด */
 .loading {
     text-align: center;

@@ -1,0 +1,175 @@
+/* สไตล์สำหรับส่วนสรุปสถานะ */
+#statusSummary {
+    margin-bottom: 15px;
+    padding: 10px; /* เพิ่ม padding */
+    background-color: var(--surface-1dp); /* เพิ่มพื้นหลัง */
+    border-radius: var(--card-radius); /* เพิ่มความโค้ง */
+    box-shadow: var(--box-shadow); /* เพิ่มเงา */
+    width: 100%; /* ขยายให้เต็มความกว้าง */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* ขยายรายการให้เต็มความกว้าง */
+    margin-top: 5px; /* เพิ่มระยะห่างด้านบน */
+    box-sizing: border-box; /* ให้ padding อยู่ภายในขนาดที่กำหนด */
+}
+
+#statusSummary p {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 5px 0;
+    padding: 8px 10px; /* เพิ่ม padding ทั้ง 4 ด้าน */
+    transition: var(--transition);
+    background-color: var(--surface-2dp); /* เพิ่มพื้นหลัง */
+    border-radius: var(--button-radius); /* เพิ่มความโค้ง */
+    width: 100%; /* ขยายให้เต็มความกว้าง */
+    position: relative; /* เพื่อให้สามารถจัดตำแหน่งได้ดีขึ้น */
+}
+
+#statusSummary p:hover {
+    transform: translateY(-2px);
+    cursor: default; /* เปลี่ยนเคอร์เซอร์เป็นปกติ */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* เพิ่มเงาเมื่อ hover */
+    background-color: var(--surface-3dp); /* เปลี่ยนสีพื้นหลังเมื่อ hover */
+}
+
+#statusSummary p:hover .count-badge {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+#statusSummary p:hover .status-icon-text {
+    letter-spacing: 0.5px; /* เพิ่มระยะห่างระหว่างตัวอักษรเมื่อ hover */
+    transition: letter-spacing 0.3s ease;
+}
+
+/* สไตล์สำหรับข้อความสถานะ */
+.status-icon-text {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    position: relative; /* เพื่อให้สามารถจัดตำแหน่งได้ดีขึ้น */
+    transition: all 0.3s ease; /* เพิ่ม transition เพื่อให้การเปลี่ยนแปลงดูนุ่มนวล */
+}
+
+/* สำหรับโหมดเดสก์ท็อป ให้ข้อความเต็มความกว้าง */
+.status-icon-text.full-width {
+    flex: 1;
+    justify-content: flex-start;
+    font-weight: 500;
+    font-size: 15px; /* เพิ่มขนาดตัวอักษร */
+    padding-left: 5px; /* เพิ่มระยะห่างด้านซ้าย */
+    color: var(--on-surface); /* สีข้อความปกติ */
+    width: 100%; /* ขยายให้เต็มความกว้าง */
+    white-space: nowrap; /* ป้องกันการขึ้นบรรทัดใหม่ */
+    overflow: hidden; /* ซ่อนข้อความที่เกินขอบ */
+    text-overflow: ellipsis; /* แสดงจุดไข่ปลาเมื่อข้อความยาวเกินไป */
+    letter-spacing: 0.2px; /* เพิ่มระยะห่างระหว่างตัวอักษร */
+}
+
+/* สีข้อความตามสถานะในโหมดเดสก์ท็อป */
+#statusSummary p:first-child .status-icon-text {
+    color: var(--success-color);
+}
+
+#statusSummary p:last-child .status-icon-text {
+    color: var(--danger-color);
+}
+
+/* สไตล์สำหรับ badge แสดงจำนวน */
+.count-badge {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: var(--transition);
+    flex-shrink: 0; /* ป้องกันการหดตัว */
+    margin-left: 10px; /* เพิ่มระยะห่างจากข้อความ */
+    position: relative; /* เพื่อให้สามารถใช้ z-index ได้ */
+    z-index: 1; /* ให้อยู่ด้านบนเมื่อมีการ hover */
+}
+
+/* เพิ่ม animation สำหรับการอัปเดตจำนวน */
+.count-badge.pulse {
+    animation: pulse-animation 0.6s ease-in-out;
+}
+
+@keyframes pulse-animation {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+
+
+.count-badge.green {
+    background-color: var(--success-color);
+    background-image: linear-gradient(45deg, var(--success-color), #4cd964);
+}
+
+.count-badge.red {
+    background-color: var(--danger-color);
+    background-image: linear-gradient(45deg, var(--danger-color), #ff5b5b);
+}
+
+/* สไตล์สำหรับโหมดมือถือ */
+@media (max-width: 768px) {
+    .status-icon-text {
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* ลบคลาส full-width ในโหมดมือถือ */
+    .status-icon-text.full-width {
+        flex: none;
+        justify-content: center;
+        white-space: normal; /* อนุญาตให้ขึ้นบรรทัดใหม่ในโหมดมือถือ */
+        width: auto; /* ไม่กำหนดความกว้างในโหมดมือถือ */
+    }
+
+    #statusSummary {
+        flex-direction: row; /* จัดให้อยู่แถวเดียวกัน */
+        justify-content: space-between; /* กระจายให้เต็มพื้นที่ */
+        padding: 10px; /* ลด padding */
+        margin-bottom: 10px; /* ลดระยะห่างด้านล่าง */
+    }
+
+    #statusSummary p {
+        padding: 8px;
+        background-color: var(--surface-2dp); /* เพิ่มพื้นหลังในโหมดมือถือ */
+        border-radius: var(--card-radius); /* เพิ่มความโค้งในโหมดมือถือ */
+        width: 48%; /* กำหนดความกว้างให้พอดีกับครึ่งหนึ่งของพื้นที่ */
+        margin: 0; /* ลบระยะห่างระหว่างรายการ */
+    }
+
+    #statusSummary p:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    #statusSummary p:hover .count-badge {
+        transform: none;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .count-badge {
+        margin-left: 5px; /* ลดระยะห่างในโหมดมือถือ */
+        width: 24px; /* ลดขนาดในโหมดมือถือ */
+        height: 24px; /* ลดขนาดในโหมดมือถือ */
+        font-size: 12px; /* ลดขนาดตัวอักษรในโหมดมือถือ */
+    }
+}

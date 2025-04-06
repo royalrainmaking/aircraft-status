@@ -568,36 +568,20 @@ function generateAircraftList(filteredFlights = flightData) {
 
 // ฟังก์ชันอัปเดตสรุปสถานะ
 function updateStatusSummary(availableCount, unavailableCount) {
-    // ตรวจสอบว่าเป็นอุปกรณ์มือถือหรือไม่
-    const isMobile = checkIsMobile();
-
     // อัปเดตข้อความในแต่ละสถานะ
     const availableText = document.querySelector('#statusSummary p:first-child');
     const unavailableText = document.querySelector('#statusSummary p:last-child');
 
-    if (isMobile) {
-        // สำหรับมือถือ แสดงเฉพาะไอคอนและตัวเลข
-        availableText.innerHTML = `
-            <span class="status-icon-text">✅</span>
-            <span class="green" data-count="${availableCount}"></span>
-        `;
+    // ใช้รูปแบบเดียวกันทั้งในโหมดมือถือและเดสก์ท็อป
+    availableText.innerHTML = `
+        <span class="status-icon-text">✅ ใช้งานได้</span>
+        <span class="count-badge green">${availableCount}</span>
+    `;
 
-        unavailableText.innerHTML = `
-            <span class="status-icon-text">❌</span>
-            <span class="red" data-count="${unavailableCount}"></span>
-        `;
-    } else {
-        // สำหรับเดสก์ท็อป แสดงทั้งข้อความและตัวเลข
-        availableText.innerHTML = `
-            ✅ ใช้งานได้ <span class="count-text">(${availableCount})</span>
-            <span class="green" data-count="${availableCount}"></span>
-        `;
-
-        unavailableText.innerHTML = `
-            ❌ ใช้งานไม่ได้ <span class="count-text">(${unavailableCount})</span>
-            <span class="red" data-count="${unavailableCount}"></span>
-        `;
-    }
+    unavailableText.innerHTML = `
+        <span class="status-icon-text">❌ ใช้งานไม่ได้</span>
+        <span class="count-badge red">${unavailableCount}</span>
+    `;
 
     // เพิ่ม animation เมื่อมีการอัปเดตจำนวน
     const greenSpan = document.querySelector('#statusSummary .green');

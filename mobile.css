@@ -17,6 +17,58 @@
         max-width: 100vw;
     }
 
+    /* จัดการ sidebar content ให้เป็น 2 คอลัมน์ */
+    #sidebar-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* แบ่งเป็น 2 คอลัมน์เท่าๆ กัน */
+        grid-gap: 10px;
+        grid-auto-flow: row dense; /* ช่วยจัดเรียงให้ไม่มีช่องว่าง */
+    }
+
+    /* กำหนดให้บางส่วนกินพื้นที่ทั้ง 2 คอลัมน์ */
+    #sidebar-content .sidebar-header,
+    #sidebar-content .close-btn {
+        grid-column: 1 / -1; /* กินพื้นที่ทั้งแถว */
+    }
+
+    /* ปรับขนาดรูปภาพให้เล็กลง */
+    #sidebar-content .image-container {
+        grid-column: 1; /* ให้อยู่คอลัมน์แรก */
+        grid-row: 2; /* กำหนดแถวให้ชัดเจน */
+        margin-bottom: 5px;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: none !important; /* เอาเงาออกในโหมดมือถือ */
+    }
+
+    #sidebar-content .airplane-image {
+        max-width: 100%;
+        max-height: 100px; /* จำกัดความสูงของรูป */
+        object-fit: contain;
+        filter: none !important; /* เอา filter ออก */
+    }
+
+    /* เอา overlay ออกในโหมดมือถือ */
+    #sidebar-content .image-overlay {
+        background: none !important;
+        padding: 10px;
+    }
+
+    /* ปรับแต่ง badge ในโหมดมือถือ */
+    #sidebar-content .aircraft-type-badge {
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    #sidebar-content .aircraft-title {
+        font-size: 14px;
+        margin: 5px 0;
+        text-align: center;
+    }
+
     #sidebar.active {
         transform: translateY(0);
     }
@@ -42,7 +94,66 @@
     }
 
     .image-container {
+        margin-bottom: 5px;
+    }
+
+    /* ปรับแต่งการ์ดข้อมูลใน sidebar */
+    .info-card {
         margin-bottom: 10px;
+        height: 100%;
+    }
+
+    /* จัดการการ์ดข้อมูลชั่วโมงบินให้อยู่คอลัมน์ที่ 2 */
+    .info-card.flight-hours {
+        grid-column: 2; /* ให้อยู่คอลัมน์ที่ 2 */
+        grid-row: 2; /* ให้อยู่แถวเดียวกับรูปภาพ */
+        margin-bottom: 5px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: auto;
+    }
+
+    /* ปรับขนาดข้อความในการ์ดชั่วโมงบิน */
+    .info-card.flight-hours .info-value {
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .info-card.flight-hours .info-label {
+        font-size: 11px;
+    }
+
+    /* กำหนดให้การ์ดข้อมูลบางส่วนกินพื้นที่ทั้ง 2 คอลัมน์ */
+    .info-card:has(.note-box),
+    .info-card:has(.chart-container),
+    .info-card:has(.chart-header),
+    .info-card:has(.maintenance-chart),
+    .info-card:has(.donut-chart) {
+        grid-column: 1 / -1;
+    }
+
+    /* ปรับขนาดตัวอักษรให้เล็กลงในโหมดมือถือ */
+    .info-card-header h3 {
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .info-value {
+        font-size: 14px;
+    }
+
+    .info-label {
+        font-size: 12px;
+    }
+
+    /* ลดขนาด padding ของการ์ด */
+    .info-card-header {
+        padding: 8px 10px;
+    }
+
+    .info-card-content {
+        padding: 8px;
     }
 
     /* ปรับแต่งรายการเครื่องบิน */
@@ -54,8 +165,11 @@
         z-index: 900;
         box-sizing: border-box;
         position: fixed;
+        height: 100vh; /* เพิ่มความสูงให้เต็มจอ */
         transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
-        background-color: var(--surface-color);
+        background-color: transparent; /* เอาพื้นหลังสีขาวออก */
+        display: flex;
+        flex-direction: column;
     }
 
     /* เพิ่ม overlay สีดำเมื่อเปิดรายการ */
@@ -92,21 +206,21 @@
     }
 
     #aircraftListContainer {
-        width: 95%;
+        width: 100%;
         margin: 0 auto;
         padding: 15px;
-        max-height: 400px; /* กำหนดความสูงคงที่ */
+        max-height: calc(100vh - 60px); /* ลบความสูงของส่วนหัวออก */
         overflow-y: auto;
         box-sizing: border-box;
-        border-radius: 0 0 15px 15px;
-        background-color: var(--surface-color);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 0;
+        background-color: transparent; /* เอาพื้นหลังสีขาวออก */
+        box-shadow: none; /* เอา box-shadow ออก */
     }
 
     /* ปรับแต่งการแสดงผลเมื่อเปิด/ปิดรายการ */
     #aircraftListWrapper.expanded #aircraftList {
         display: block !important;
-        max-height: 350px !important; /* บังคับใช้ความสูงสูงสุด */
+        max-height: calc(100vh - 120px) !important; /* ปรับให้พอดีกับหน้าจอ */
     }
 
     #aircraftListWrapper.collapsed #aircraftList {
@@ -115,7 +229,7 @@
 
     /* ปรับแต่งความสูงของรายการเครื่องบินในโหมดมือถือ */
     #aircraftListWrapper.expanded .aircraft-list {
-        max-height: 350px !important;
+        max-height: calc(100vh - 120px) !important; /* ปรับให้พอดีกับหน้าจอ */
         overflow-y: auto !important;
     }
 
@@ -163,7 +277,7 @@
         box-sizing: border-box;
         padding-left: 0;
         margin: 0;
-        max-height: 350px; /* กำหนดความสูงคงที่ */
+        max-height: calc(100vh - 120px); /* ปรับให้พอดีกับหน้าจอ */
         overflow-y: auto;
     }
 
@@ -181,6 +295,45 @@
         width: 10px;
         height: 10px;
         margin-right: 8px;
+        display: inline-block !important; /* บังคับให้แสดงไอคอนในโหมดมือถือ */
+        content: "" !important; /* ลบเนื้อหาภายใน */
+        text-indent: -9999px; /* ซ่อนข้อความ */
+        overflow: hidden; /* ป้องกันการแสดงข้อความที่ซ่อน */
+        vertical-align: middle; /* จัดให้อยู่กลางแนวตั้ง */
+    }
+
+    /* ปรับแต่งข้อความสถานะในโหมดมือถือ */
+    .status-icon-text {
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* ลบคลาส full-width ในโหมดมือถือ */
+    .status-icon-text.full-width {
+        flex: none;
+        justify-content: center;
+    }
+
+    /* ปรับแต่งสีของไอคอนสถานะในโหมดมือถือ */
+    .status-icon.green {
+        background-color: var(--success-color) !important;
+        box-shadow: 0 0 5px rgba(56, 176, 0, 0.5) !important;
+    }
+
+    .status-icon.red {
+        background-color: var(--danger-color) !important;
+        box-shadow: 0 0 5px rgba(255, 51, 102, 0.5) !important;
+    }
+
+    /* ลบเครื่องหมายถูกและกากบาทในโหมดมือถือ */
+    .status-icon.green::before,
+    .status-icon.red::before,
+    .status-icon.green::after,
+    .status-icon.red::after {
+        content: none !important;
+        display: none !important;
     }
 
     .search-wrapper {
@@ -278,10 +431,24 @@
     }
 
     .info-card-header {
-        padding: 8px 10px;
+        padding: 6px 8px;
+        font-size: 12px;
     }
 
     .info-card-content {
-        padding: 10px;
+        padding: 8px;
+    }
+
+    /* ปรับแต่ง sidebar ให้ดูดีขึ้นในโหมดมือถือ */
+    #sidebar.active {
+        padding-bottom: 20px; /* เพิ่ม padding ด้านล่าง */
+    }
+
+    /* ปรับแต่งปุ่มปิด */
+    #sidebar .close-btn {
+        top: 10px;
+        right: 10px;
+        width: 30px;
+        height: 30px;
     }
 }
