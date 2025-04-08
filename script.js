@@ -1,3 +1,115 @@
+// ฟังก์ชันสำหรับดึงข้อมูลทุกวันที่และเก็บไว้ใน cache
+async function prefetchAllDates() {
+    console.log("🔄 เริ่มต้นการดึงข้อมูลทุกวันที่เพื่อเก็บใน cache...");
+    
+    try {
+        const sheetID = "1_M74Pe_4uul0fkcEea8AMxQIMcPznNZ9ttCqvbeQgBs";
+        const aircraftSheetGID = "705816349";
+        const allDatesKey = 'allCachedDates';
+        
+        // ตรวจสอบว่ามีรายการวันที่ที่มีใน cache หรือไม่
+        let cachedDates = [];
+        const cachedDatesStr = localStorage.getItem(allDatesKey);
+        if (cachedDatesStr) {
+            try {
+                cachedDates = JSON.parse(cachedDatesStr);
+                console.log(`📋 พบรายการวันที่ที่มีใน cache จำนวน ${cachedDates.length} วันที่`);
+            } catch (e) {
+                console.error("❌ ไม่สามารถแปลงข้อมูลรายการวันที่ได้:", e);
+            }
+        }
+        
+        // URL สำหรับดึงข้อมูลทั้งหมด
+        const aircraftURL = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&gid=${aircraftSheetGID}`;
+        
+        // ดึงข้อมูลทั้งหมด
+        const response = await fetch(aircraftURL);
+        const text = await response.text();
+        const json = JSON.parse(text.substring(47, text.length - 2));
+        
+        // ตรวจสอบว่ามีข้อมูลหรือไม่
+        if (json && json.table && json.table.rows && json.table.rows.length > 0) {
+            console.log(`📊 ดึงข้อมูลจาก Google Sheets สำเร็จ จำนวน ${json.table.rows.length} แถว`);
+            
+            // รายการวันที่ที่พบ
+            const foundDates = [];
+            
+            // วนลูปตรวจสอบทุกแถว
+            for (let i = 0; i < json.table.rows.length; i++) {
+                const row = json.table.rows[i];
+                
+                // ตรวจสอบว่ามีข้อมูลในคอลัมน์ A (วันที่) หรือไม่
+                if (row.c && row.c[0] && row.c[0].v) {
+                    // ดึงค่าวันที่จากคอลัมน์ A
+                    let rowDate = row.c[0].v;
+                    let formattedDate = "";
+                    
+                    // แปลงวันที่ให้เป็นรูปแบบ YYYY-MM-DD
+                    if (rowDate instanceof Date) {
+                        const year = rowDate.getFullYear();
+                        const month = String(rowDate.getMonth() + 1).padStart(2, '0');
+                        const day = String(rowDate.getDate()).padStart(2, '0');
+                        formattedDate = `${year}-${month}-${day}`;
+                    } else if (typeof rowDate === 'string') {
+                        // แปลงรูปแบบวันที่ต่างๆ เป็น YYYY-MM-DD
+                        if (rowDate.includes('/')) {
+                            const parts = rowDate.split('/');
+                            if (parts.length === 3) {
+                                const day = parts[0].padStart(2, '0');
+                                const month = parts[1].padStart(2, '0');
+                                let year = parts[2];
+                                if (year.length === 2) year = `20${year}`;
+                                formattedDate = `${year}-${month}-${day}`;
+                            }
+                        } else if (rowDate.includes('-')) {
+                            const parts = rowDate.split('-');
+                            if (parts.length === 3) {
+                                if (parts[0].length === 4) {
+                                    // เป็นรูปแบบ YYYY-MM-DD อยู่แล้ว
+                                    formattedDate = rowDate;
+                                } else {
+                                    // อาจเป็นรูปแบบ DD-MM-YYYY
+                                    const day = parts[0].padStart(2, '0');
+                                    const month = parts[1].padStart(2, '0');
+                                    let year = parts[2];
+                                    if (year.length === 2) year = `20${year}`;
+                                    formattedDate = `${year}-${month}-${day}`;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // ถ้าสามารถแปลงวันที่ได้ และยังไม่มีในรายการ
+                    if (formattedDate && !foundDates.includes(formattedDate)) {
+                        foundDates.push(formattedDate);
+                        
+                        // ตรวจสอบว่าวันที่นี้มีใน cache แล้วหรือไม่
+                        const cacheKey = `flightDataCache_${formattedDate}`;
+                        const timestampKey = `flightDataTimestamp_${formattedDate}`;
+                        const cachedData = localStorage.getItem(cacheKey);
+                        const cachedTimestamp = localStorage.getItem(timestampKey);
+                        const currentTime = new Date().getTime();
+                        const CACHE_EXPIRATION = 24 * 60 * 60 * 1000; // 1 วัน
+                        
+                        // ถ้ายังไม่มีใน cache หรือข้อมูลหมดอายุแล้ว ให้ดึงข้อมูลใหม่
+                        if (!cachedData || !cachedTimestamp || (currentTime - parseInt(cachedTimestamp) >= CACHE_EXPIRATION)) {
+                            // ดึงข้อมูลสำหรับวันที่นี้และเก็บใน cache
+                            console.log(`📅 กำลังดึงข้อมูลสำหรับวันที่: ${formattedDate}`);
+                            await fetchFlightData(formattedDate);
+                        } else {
+                            console.log(`📋 มีข้อมูลใน cache สำหรับวันที่ ${formattedDate} แล้ว`);
+                        }
+                    }
+                }
+            }
+            
+            console.log(`✅ ดึงข้อมูลและเก็บใน cache สำเร็จสำหรับ ${foundDates.length} วันที่`);
+        }
+    } catch (error) {
+        console.error("❌ เกิดข้อผิดพลาดในการดึงข้อมูลทุกวันที่:", error);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
     console.log("เริ่มต้นแอปพลิเคชัน...");
     try {
@@ -7,6 +119,11 @@ document.addEventListener("DOMContentLoaded", async function () {
         // โหลดข้อมูลก่อน
         await fetchFlightData();
         console.log("โหลดข้อมูลสำเร็จ");
+        
+        // เริ่มดึงข้อมูลทุกวันที่ในพื้นหลัง
+        setTimeout(() => {
+            prefetchAllDates();
+        }, 2000); // รอ 2 วินาทีหลังจากโหลดข้อมูลหลักเสร็จ
 
         // สร้างแผนที่
         initMap();
@@ -336,7 +453,7 @@ function showMarkers(filteredFlights) {
                 return;
             }
 
-            if (filteredFlights.some(f => f && f.aircraftNumber === flight.aircraftNumber)) {
+            if (filteredFlights.some(f => f && f.aircraftNumber && flight.aircraftNumber && f.aircraftNumber === flight.aircraftNumber)) {
                 if (marker && !map.hasLayer(marker)) {
                     marker.addTo(map); // แสดงมาร์กเกอร์ที่ตรงกับคำค้นหา
                 }
@@ -702,8 +819,8 @@ function filterAircraftByNumberOrNameOrMission(searchTerm) {
             }
 
             // ค้นหาจากสถานะ
-            if (isSearchingForAvailable && flight.status === "yes") return true;
-            if (isSearchingForUnavailable && flight.status === "no") return true;
+            if (isSearchingForAvailable && flight.status && flight.status.toLowerCase() === "yes") return true;
+            if (isSearchingForUnavailable && (flight.status === undefined || flight.status === null || flight.status.toLowerCase() === "no")) return true;
 
             // ค้นหาจากชั่วโมงบิน
             if (flight.flightHours) {
@@ -849,7 +966,7 @@ const aircraftImages = {
 
 
 // ฟังก์ชันที่ใช้ตัด :00 ออกจากข้อมูล
-function formatTime(timeString) {
+function simplifyTime(timeString) {
     if (timeString && timeString.includes(":00")) {
         return timeString.slice(0, -3);
     }
@@ -897,7 +1014,7 @@ function generateAircraftList(filteredFlights = flightData) {
         statusIcon.classList.add("status-icon");
 
         // ตรวจสอบสถานะและกำหนดไอคอนที่เหมาะสม
-        if (flight.status.toLowerCase() === "yes") {
+        if (flight.status && typeof flight.status === 'string' && flight.status.toLowerCase() === "yes") {
             statusIcon.classList.add("green");
             statusIcon.setAttribute("title", "พร้อมใช้งาน");
             // ไม่ใส่เครื่องหมายถูก
@@ -1115,18 +1232,43 @@ async function fetchFlightData(selectedDate = null) {
         console.log(`📅 กำลังโหลดข้อมูลสำหรับวันที่: ${selectedDate}`);
     }
 
-    // กำหนดเวลาหมดอายุของข้อมูล (5 นาที)
-    const CACHE_EXPIRATION = 5 * 60 * 1000; // 5 นาที เป็นมิลลิวินาที
+    // กำหนดเวลาหมดอายุของข้อมูล (1 วัน)
+    const CACHE_EXPIRATION = 24 * 60 *  60 *1000; // 1 วัน เป็นมิลลิวินาที
 
     // สร้างคีย์ cache ที่รวมวันที่ที่เลือก
     const cacheKey = selectedDate ? `flightDataCache_${selectedDate}` : 'flightDataCache';
     const timestampKey = selectedDate ? `flightDataTimestamp_${selectedDate}` : 'flightDataTimestamp';
+    const allDatesKey = 'allCachedDates'; // คีย์สำหรับเก็บรายการวันที่ทั้งหมดที่มีใน cache
 
     // ตรวจสอบว่ามีข้อมูลใน localStorage หรือไม่
     const cachedData = localStorage.getItem(cacheKey);
     const cachedTimestamp = localStorage.getItem(timestampKey);
     const currentTime = new Date().getTime();
 
+    // ฟังก์ชันสำหรับเพิ่มวันที่ลงในรายการวันที่ที่มีใน cache
+    function addDateToCache(date) {
+        if (!date) return;
+        
+        // ดึงรายการวันที่ที่มีอยู่แล้ว
+        let allDates = [];
+        const cachedDates = localStorage.getItem(allDatesKey);
+        if (cachedDates) {
+            try {
+                allDates = JSON.parse(cachedDates);
+            } catch (e) {
+                console.error("❌ ไม่สามารถแปลงข้อมูลรายการวันที่ได้:", e);
+                allDates = [];
+            }
+        }
+        
+        // เพิ่มวันที่ใหม่ถ้ายังไม่มีในรายการ
+        if (!allDates.includes(date)) {
+            allDates.push(date);
+            localStorage.setItem(allDatesKey, JSON.stringify(allDates));
+            console.log(`✅ เพิ่มวันที่ ${date} ลงในรายการวันที่ที่มีใน cache`);
+        }
+    }
+    
     // ถ้ามีข้อมูลใน cache และยังไม่หมดอายุ ให้ใช้ข้อมูลจาก cache
     if (cachedData && cachedTimestamp && (currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRATION)) {
         console.log(`📋 ใช้ข้อมูลจาก cache สำหรับ ${selectedDate || 'วันนี้'}...`);
@@ -1134,6 +1276,12 @@ async function fetchFlightData(selectedDate = null) {
         const parsedData = JSON.parse(cachedData);
         parsedData.forEach(item => flightData.push(item));
         console.log("✅ โหลดข้อมูลจาก cache สำเร็จ:", flightData.length, "รายการ");
+        
+        // เพิ่มวันที่ลงในรายการวันที่ที่มีใน cache
+        if (selectedDate) {
+            addDateToCache(selectedDate);
+        }
+        
         generateAircraftList();
 
         // โหลดข้อมูลใหม่ในพื้นหลังเพื่ออัปเดต cache
@@ -1387,6 +1535,11 @@ async function fetchFlightData(selectedDate = null) {
         // บันทึกข้อมูลลงใน localStorage
         localStorage.setItem(cacheKey, JSON.stringify(flightData));
         localStorage.setItem(timestampKey, currentTime.toString());
+        
+        // เพิ่มวันที่ลงในรายการวันที่ที่มีใน cache
+        if (selectedDate) {
+            addDateToCache(selectedDate);
+        }
 
         console.log("✅ ข้อมูลอัปเดตแล้ว:", flightData.length, "รายการ");
         generateAircraftList();
@@ -1489,14 +1642,14 @@ async function fetchFlightData(selectedDate = null) {
                 if (isHelicopter) {
                     // สำหรับเฮลิคอปเตอร์
                     aircraftNumber = aircraft["หมายเลข"] || "";
-                    remainingHours = formatTime(aircraft["ชั่วโมง"] || "0");
-                    engineLH = formatTime(aircraft["ชั่วโมงเครื่องยนต์ ย1"] || "0");
-                    engineRH = formatTime(aircraft["ชั่วโมงเครื่องยนต์ ย2"] || "0");
+                    remainingHours = aircraft["ชั่วโมง"] || "0";
+                    engineLH = aircraft["ชั่วโมงเครื่องยนต์ ย1"] || "0";
+                    engineRH = aircraft["ชั่วโมงเครื่องยนต์ ย2"] || "0";
 
                     // ตรวจสอบชั่วโมงบินคงเหลือครบซ่อมทั้ง 3 ค่า
-                    const hours100 = formatTime(aircraft["ชั่วโมงบินคงเหลือครบซ่อม 100"] || "0");
-                    const hours150 = formatTime(aircraft["ชั่วโมงบินคงเหลือครบซ่อม 150"] || "0");
-                    const hours300 = formatTime(aircraft["ชั่วโมงบินคงเหลือครบซ่อม 300"] || "0");
+                    const hours100 = aircraft["ชั่วโมงบินคงเหลือครบซ่อม 100"] || "0";
+                    const hours150 = aircraft["ชั่วโมงบินคงเหลือครบซ่อม 150"] || "0";
+                    const hours300 = aircraft["ชั่วโมงบินคงเหลือครบซ่อม 300"] || "0";
 
                     // เลือกค่าที่ไม่ใช่ 0 ตามลำดับความสำคัญ
                     if (hours100 !== "0") {
@@ -1515,8 +1668,7 @@ async function fetchFlightData(selectedDate = null) {
                 } else {
                     // สำหรับเครื่องบิน
                     aircraftNumber = aircraft["เครื่องบิน"] || "";
-                    remainingHours = formatTime(aircraft["ชั่วโมงเครื่องบิน"] || "");
-
+                    
                     // ตรวจสอบชื่อคอลัมน์ที่ถูกต้อง (อาจมีช่องว่างท้ายชื่อ)
                     const keys = Object.keys(aircraft);
                     const flightHoursKey = keys.find(key => key.includes("ชั่วโมงเครื่องบิน"));
@@ -1525,10 +1677,32 @@ async function fetchFlightData(selectedDate = null) {
                     // อ่านค่าจากคอลัมน์ที่พบ
                     const rawFlightHours = flightHoursKey ? aircraft[flightHoursKey] : "";
                     const rawACheck = aCheckKey ? aircraft[aCheckKey] : "";
-
+                    
+                    // ตรวจสอบว่าเป็นเครื่องบิน SKA หรือไม่
+                    const isSKA = name.toUpperCase().includes("SKA") || name.toUpperCase().includes("SUPER KING AIR");
+                    
                     // เก็บค่าชั่วโมงเครื่องบินและ A CHECK
-                    remainingHours = formatTime(rawFlightHours || "");
-                    aCheck = formatTime(rawACheck || "");
+                    if (isSKA) {
+                        // สำหรับ SKA ให้เก็บค่าดิบไว้ใช้ในการแสดงผล
+                        console.log(`พบเครื่องบิน SKA: ${name} หมายเลข ${aircraftNumber}`);
+                        
+                        // เก็บค่าดิบไว้ใช้ในการแสดงผล
+                        remainingHours = rawFlightHours || "";
+                        aCheck = rawACheck || "";
+                    } else {
+                        // สำหรับเครื่องบินทั่วไป
+                        remainingHours = rawFlightHours || "";
+                        aCheck = rawACheck || "";
+                    }
+                    
+                    // แสดงค่าดิบที่ได้รับมาเพื่อตรวจสอบ
+                    console.log(`ข้อมูลเครื่องบินหมายเลข ${aircraftNumber}:`, {
+                        "ประเภท": isSKA ? "SKA (XX.X)" : "ทั่วไป",
+                        "ชั่วโมงเครื่องบิน (ดิบ)": rawFlightHours,
+                        "ชั่วโมงเครื่องบิน (แปลงแล้ว)": remainingHours,
+                        "A CHECK (ดิบ)": rawACheck,
+                        "A CHECK (แปลงแล้ว)": aCheck
+                    });
 
                     // คำนวณค่าครบซ่อม (ชั่วโมงเครื่องบิน - A CHECK)
                     if (rawFlightHours && rawACheck) {
@@ -1551,8 +1725,8 @@ async function fetchFlightData(selectedDate = null) {
                     }
 
                     // ตรวจสอบค่าเครื่องยนต์
-                    engineLH = formatTime(aircraft["No.1 /LH"] || "");
-                    engineRH = formatTime(aircraft["No.2 /RH"] || "");
+                    engineLH = aircraft["No.1 /LH"] || "";
+                    engineRH = aircraft["No.2 /RH"] || "";
                 }
 
                 // แปลงสถานะเป็น yes/no
@@ -1598,6 +1772,20 @@ async function fetchFlightData(selectedDate = null) {
                     longitude: coordinates[1],
                     type: type
                 };
+                
+                // เพิ่มข้อมูลดิบเพื่อการตรวจสอบ
+                if (type === 'aircraft') {
+                    // สำหรับเครื่องบิน
+                    if (typeof rawFlightHours !== 'undefined') {
+                        flight.rawFlightHours = rawFlightHours;
+                    }
+                    if (typeof rawACheck !== 'undefined') {
+                        flight.rawACheck = rawACheck;
+                    }
+                } else if (type === 'helicopter') {
+                    // สำหรับเฮลิคอปเตอร์
+                    flight.rawFlightHours = remainingHours;
+                }
 
                 // เพิ่มข้อมูลเข้าไปในอาร์เรย์
                 flightData.push(flight);
@@ -1630,9 +1818,9 @@ async function fetchFlightData(selectedDate = null) {
                 // ดึงข้อมูลจาก JSON ตามโครงสร้างที่กำหนด
                 const name = helicopter["แบบเครื่องบิน"] || "";
                 const aircraftNumber = helicopter["หมายเลข"] || "";
-                const remainingHours = formatTime(helicopter["ชั่วโมง"] || "0");
-                const engineLH = formatTime(helicopter["ชั่วโมงเครื่องยนต์ ย1"] || "0");
-                const engineRH = formatTime(helicopter["ชั่วโมงเครื่องยนต์ ย2"] || "0");
+                const remainingHours = helicopter["ชั่วโมง"] || "0";
+                const engineLH = helicopter["ชั่วโมงเครื่องยนต์ ย1"] || "0";
+                const engineRH = helicopter["ชั่วโมงเครื่องยนต์ ย2"] || "0";
 
                 // ตรวจสอบชั่วโมงบินคงเหลือครบซ่อมทั้ง 3 ค่า
                 const rawHours100 = helicopter["ชั่วโมงบินคงเหลือครบซ่อม 100"] || "_";
@@ -1755,7 +1943,7 @@ function formatTime(value) {
 
     try {
         // ถ้าเป็นตัวเลขหรือสตริงที่เป็นตัวเลข
-        if (typeof value === 'number' || (typeof value === 'string' && !isNaN(parseFloat(value)))) {
+        if (typeof value === 'number' || (typeof value === 'string' && !isNaN(parseFloat(value)) && !value.includes(':'))) {
             // แปลงเป็นตัวเลขและตรวจสอบว่าเป็นจำนวนเต็มหรือไม่
             const numValue = parseFloat(value);
             if (Number.isInteger(numValue)) {
@@ -1763,7 +1951,8 @@ function formatTime(value) {
             } else {
                 // แยกส่วนจำนวนเต็มและทศนิยม
                 const hours = Math.floor(numValue);
-                const minutes = Math.round((numValue - hours) * 60);
+                // ใช้ Math.trunc แทน Math.round เพื่อไม่ให้มีการปัดเศษ
+                const minutes = Math.trunc((numValue - hours) * 60);
                 return `${hours}:${minutes.toString().padStart(2, '0')}`;  // เช่น 5.5 เป็น "5:30"
             }
         }
@@ -1775,7 +1964,15 @@ function formatTime(value) {
                 const hours = parseInt(parts[0]);
                 const minutes = parseInt(parts[1]);
                 if (!isNaN(hours) && !isNaN(minutes)) {
-                    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+                    // ตรวจสอบว่านาทีอยู่ในช่วง 0-59
+                    if (minutes >= 0 && minutes < 60) {
+                        return `${hours}:${minutes.toString().padStart(2, '0')}`;
+                    } else {
+                        // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
+                        const extraHours = Math.floor(minutes / 60);
+                        const adjustedMinutes = minutes % 60;
+                        return `${hours + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
+                    }
                 }
             }
         }
@@ -1797,50 +1994,65 @@ function extractProvince(text) {
     return "นครสวรรค์";
 }
 
-// ตัวแปรเก็บจำนวนเครื่องบินในแต่ละตำแหน่ง
+// ตัวแปรเก็บจำนวนมาร์กเกอร์ในแต่ละตำแหน่ง
 const positionCounts = {};
-// ตัวแปรเก็บข้อมูลการจัดเรียงเครื่องบินในแต่ละตำแหน่ง
-const positionArrangements = {};
 
-function addJitter([lat, lng]) {
-    // สร้างคีย์สำหรับตำแหน่งนี้
-    const posKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-
-    // ถ้ายังไม่มีเครื่องบินในตำแหน่งนี้ ให้เริ่มนับที่ 0 และสร้างอาร์เรย์เก็บข้อมูลการจัดเรียง
-    if (!positionCounts[posKey]) {
-        positionCounts[posKey] = 0;
-        positionArrangements[posKey] = [];
-    }
-
-    // เพิ่มจำนวนเครื่องบินในตำแหน่งนี้
-    positionCounts[posKey]++;
-    const count = positionCounts[posKey];
-
-    // กำหนดระยะห่างระหว่างเครื่องบิน (ค่าคงที่ ไม่ขึ้นกับการซูม)
-    const offset = 0.03; // ระยะห่างที่มากพอแม้จะซูมออก
-
-    // คำนวณตำแหน่งใหม่แบบกระจายเป็นวงกลม
-    let jitterLat = 0;
-    let jitterLng = 0;
-
-    if (count === 1) {
-        // เครื่องบินแรกอยู่ตรงกลาง
-        jitterLat = 0;
-        jitterLng = 0;
+// ฟังก์ชันเพิ่ม jitter ให้กับพิกัดเพื่อไม่ให้มาร์กเกอร์ทับกัน
+function addJitter(coordinates) {
+    // ตรวจสอบรูปแบบพารามิเตอร์ที่รับเข้ามา
+    let lat, lng;
+    
+    if (Array.isArray(coordinates) && coordinates.length === 2) {
+        // กรณีรับเป็น array [lat, lng]
+        [lat, lng] = coordinates;
     } else {
-        // จัดเรียงเครื่องบินเป็นวงกลมรอบจุดศูนย์กลาง
-        // คำนวณมุมสำหรับตำแหน่งบนวงกลม
-        const angle = (count - 2) * (Math.PI / 4); // แบ่งเป็น 8 ส่วนรอบวงกลม
-
-        // คำนวณรัศมีตามจำนวนเครื่องบิน (เพิ่มขึ้นเมื่อมีเครื่องบินมากขึ้น)
-        const radius = offset * (1 + Math.floor((count - 2) / 8) * 0.5);
-
-        // คำนวณตำแหน่งบนวงกลม
-        jitterLat = radius * Math.sin(angle);
-        jitterLng = radius * Math.cos(angle);
+        console.warn("พิกัดไม่ถูกต้อง ไม่สามารถเพิ่ม jitter ได้");
+        return coordinates || [0, 0];
     }
+    
+    try {
+        // ตรวจสอบว่าพิกัดเป็นตัวเลขหรือไม่
+        lat = parseFloat(lat);
+        lng = parseFloat(lng);
 
-    return [lat + jitterLat, lng + jitterLng];
+        if (isNaN(lat) || isNaN(lng)) {
+            console.warn("พิกัดไม่ใช่ตัวเลข ไม่สามารถเพิ่ม jitter ได้");
+            return coordinates;
+        }
+
+        // สร้างคีย์สำหรับตำแหน่งนี้ (ปัดเศษให้เหลือ 4 ตำแหน่ง)
+        const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+
+        // ตรวจสอบว่ามีมาร์กเกอร์ในตำแหน่งนี้กี่ตัวแล้ว
+        if (!positionCounts[key]) {
+            positionCounts[key] = 0;
+        }
+
+        // เพิ่มจำนวนมาร์กเกอร์ในตำแหน่งนี้
+        positionCounts[key]++;
+        const count = positionCounts[key];
+
+        // กำหนดระยะห่างระหว่างเครื่องบิน
+        const offset = 0.0005 * Math.min(count, 5); // จำกัดระยะห่างสูงสุด
+
+        // ถ้ามีมาร์กเกอร์ในตำแหน่งนี้มากกว่า 1 ตัว ให้เพิ่ม jitter
+        if (count > 1) {
+            // คำนวณมุมสำหรับการกระจายมาร์กเกอร์เป็นวงกลม
+            const angle = (count - 2) * (Math.PI / 4); // แบ่งเป็น 8 ส่วนรอบวงกลม
+
+            // คำนวณพิกัดใหม่
+            const jitteredLat = lat + offset * Math.cos(angle);
+            const jitteredLng = lng + offset * Math.sin(angle);
+
+            return [jitteredLat, jitteredLng];
+        }
+
+        // ถ้ามีมาร์กเกอร์ในตำแหน่งนี้เพียงตัวเดียว ให้ใช้พิกัดเดิม
+        return [lat, lng];
+    } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการเพิ่ม jitter:", error);
+        return coordinates;
+    }
 }
 
 let map;
@@ -2076,13 +2288,26 @@ async function updateSidebar(flight) {
 
         // คำนวณเปอร์เซ็นต์สำหรับเครื่องบินทั่วไป
         aCheckPercentage = 100 - (remainingHoursToMaintenance / maxHours) * 100;
-
+        console.log(`✅ คำนวณเฮลิคอปเตอร์: ${flight.remainingHours}`);
         console.log(`✅ คำนวณเครื่องบิน: ${aCheckValue} - ${flightHoursValue} = ${remainingHoursToMaintenance.toFixed(2)} ชั่วโมง`);
         console.log(`✅ คำนวณเปอร์เซ็นต์เครื่องบิน: 100 - (${remainingHoursToMaintenance.toFixed(2)}/${maxHours}) * 100 = ${aCheckPercentage.toFixed(2)}%`);
     }
 
-    // แปลงกลับเป็นรูปแบบ HH:MM สำหรับแสดงผล
-    const formattedRemainingHours = formatDecimalToTime(remainingHoursToMaintenance);
+    // แปลงกลับเป็นรูปแบบ HH:MM สำหรับแสดงผล หรือใช้ค่าดิบสำหรับ SKA
+    let formattedRemainingHours;
+    
+    // ตรวจสอบว่าเป็นเครื่องบิน SKA หรือไม่
+    const isSKA = flight.name && (flight.name.toUpperCase().includes("SKA") || flight.name.toUpperCase().includes("SUPER KING AIR"));
+    
+    if (isSKA) {
+        // สำหรับเครื่องบิน SKA ให้แสดงค่าทศนิยม 1 ตำแหน่ง
+        formattedRemainingHours = remainingHoursToMaintenance.toFixed(1);
+        console.log(`✅ SKA: แสดงค่าทศนิยม ${formattedRemainingHours}`);
+    } else {
+        // สำหรับเครื่องบินทั่วไป ให้แปลงเป็นรูปแบบ HH:MM
+        formattedRemainingHours = formatDecimalToTime(remainingHoursToMaintenance);
+        console.log(`✅ ทั่วไป: แปลงเป็นรูปแบบเวลา ${formattedRemainingHours}`);
+    }
 
     // ถ้าเปอร์เซ็นต์ติดลบ ให้ตั้งเป็น 0%
     if (aCheckPercentage < 0) {
@@ -2562,10 +2787,8 @@ function updateMapMarkers() {
 
     // รีเซ็ตตัวนับตำแหน่งเพื่อจัดเรียงมาร์กเกอร์ใหม่
     // ล้างข้อมูลเก่าทั้งหมด
-    if (typeof positionCounts !== 'undefined') {
-        for (let key in positionCounts) {
-            delete positionCounts[key];
-        }
+    for (let key in positionCounts) {
+        delete positionCounts[key];
     }
 
     // สร้างมาร์กเกอร์ใหม่จากข้อมูลปัจจุบัน
@@ -2678,15 +2901,13 @@ function updateMapMarkers() {
             let adjustedLat = parseFloat(flight.latitude);
             let adjustedLng = parseFloat(flight.longitude);
 
-            // ตรวจสอบว่าฟังก์ชัน addJitter มีอยู่หรือไม่
-            if (typeof addJitter === 'function') {
-                try {
-                    const [jitteredLat, jitteredLng] = addJitter([adjustedLat, adjustedLng]);
-                    adjustedLat = jitteredLat;
-                    adjustedLng = jitteredLng;
-                } catch (error) {
-                    console.warn("ไม่สามารถใช้ฟังก์ชัน addJitter ได้:", error);
-                }
+            // เพิ่ม jitter ให้กับพิกัดเพื่อไม่ให้มาร์กเกอร์ทับกัน
+            try {
+                const [jitteredLat, jitteredLng] = addJitter([adjustedLat, adjustedLng]);
+                adjustedLat = jitteredLat;
+                adjustedLng = jitteredLng;
+            } catch (error) {
+                console.warn("ไม่สามารถใช้ฟังก์ชัน addJitter ได้:", error);
             }
 
             // สร้างมาร์กเกอร์ด้วยตำแหน่งที่ปรับแล้ว
@@ -2723,6 +2944,24 @@ function updateMapMarkers() {
             console.error("เกิดข้อผิดพลาดในการประมวลผลข้อมูลเครื่องบิน:", error);
         }
     });
+}
+
+// ฟังก์ชันสกัดชื่อจังหวัดจากข้อความ
+function extractProvince(text) {
+    if (!text) return "กรุงเทพฯ";
+    
+    // แปลงเป็นตัวพิมพ์เล็กและตัดช่องว่างที่ไม่จำเป็น
+    const normalizedText = text.toLowerCase().trim();
+    
+    // ตรวจสอบว่ามีชื่อจังหวัดอยู่ในข้อความหรือไม่
+    for (const province in provinceCoordinates) {
+        if (normalizedText.includes(province.toLowerCase())) {
+            return province;
+        }
+    }
+    
+    // ถ้าไม่พบชื่อจังหวัด ให้ใช้ค่าเริ่มต้น
+    return "กรุงเทพฯ";
 }
 
 // ฟังก์ชันแปลงเวลาในรูปแบบ HH:MM เป็นชั่วโมงทศนิยม
@@ -2780,6 +3019,11 @@ function formatDecimalToTime(decimalHours) {
 
     // จัดรูปแบบให้เป็น HH:MM
     return `${hours}:${minutes.toString().padStart(2, '0')}`;
+}
+
+// ฟังก์ชันสำหรับเครื่องบิน SKA (ไม่ได้ใช้แล้ว เก็บไว้เผื่อต้องการใช้ในอนาคต)
+function convertSKATimeFormat(timeStr) {
+    return timeStr;
 }
 
 // ฟังก์ชันบังคับโหลดข้อมูลใหม่
@@ -3180,63 +3424,7 @@ function formatDecimalToTime(decimalHours) {
 }
 
 // ฟังก์ชันเพิ่ม jitter ให้กับพิกัด เพื่อไม่ให้มาร์กเกอร์ทับซ้อนกัน
-function addJitter(coordinates) {
-    if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
-        console.warn("พิกัดไม่ถูกต้อง ไม่สามารถเพิ่ม jitter ได้");
-        return coordinates || [0, 0];
-    }
-
-    try {
-        // ตรวจสอบว่าพิกัดเป็นตัวเลขหรือไม่
-        const lat = parseFloat(coordinates[0]);
-        const lng = parseFloat(coordinates[1]);
-
-        if (isNaN(lat) || isNaN(lng)) {
-            console.warn("พิกัดไม่ใช่ตัวเลข ไม่สามารถเพิ่ม jitter ได้");
-            return coordinates;
-        }
-
-        // ตรวจสอบว่ามีตัวแปร positionCounts หรือไม่
-        if (typeof positionCounts === 'undefined') {
-            window.positionCounts = {};
-        }
-
-        // สร้างคีย์สำหรับตำแหน่งนี้ (ปัดเศษให้เหลือ 4 ตำแหน่ง)
-        const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-
-        // ตรวจสอบว่ามีมาร์กเกอร์ในตำแหน่งนี้กี่ตัวแล้ว
-        if (!positionCounts[key]) {
-            positionCounts[key] = 0;
-        }
-
-        // เพิ่มจำนวนมาร์กเกอร์ในตำแหน่งนี้
-        positionCounts[key]++;
-
-        // ถ้ามีมาร์กเกอร์ในตำแหน่งนี้มากกว่า 1 ตัว ให้เพิ่ม jitter
-        if (positionCounts[key] > 1) {
-            // คำนวณมุมสำหรับการกระจายมาร์กเกอร์เป็นวงกลม
-            const angle = (positionCounts[key] - 1) * (2 * Math.PI / 8); // แบ่งเป็น 8 ส่วนรอบวงกลม
-
-            // คำนวณระยะห่างจากจุดศูนย์กลาง (เพิ่มขึ้นตามจำนวนมาร์กเกอร์)
-            const distance = 0.0005 * Math.min(positionCounts[key], 5); // จำกัดระยะห่างสูงสุด
-
-            // คำนวณพิกัดใหม่
-            const jitteredLat = lat + distance * Math.cos(angle);
-            const jitteredLng = lng + distance * Math.sin(angle);
-
-            return [jitteredLat, jitteredLng];
-        }
-
-        // ถ้ามีมาร์กเกอร์ในตำแหน่งนี้เพียงตัวเดียว ให้ใช้พิกัดเดิม
-        return [lat, lng];
-    } catch (error) {
-        console.error("เกิดข้อผิดพลาดในการเพิ่ม jitter:", error);
-        return coordinates;
-    }
-}
-
-// ตัวแปรเก็บจำนวนมาร์กเกอร์ในแต่ละตำแหน่ง
-window.positionCounts = {};
+// ตัวแปรเก็บจำนวนมาร์กเกอร์ในแต่ละตำแหน่งถูกประกาศไว้แล้วที่ด้านบน
 
 // ตัวแปรเก็บรูปภาพของเครื่องบินแต่ละประเภท
 window.aircraftImages = {

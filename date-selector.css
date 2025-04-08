@@ -49,7 +49,7 @@
     width: 100%;
     margin-bottom: 6px;
     gap: 3px;
-    max-width: 120px; /* จำกัดความกว้างสูงสุด */
+    max-width: 160px; /* เพิ่มความกว้างเพื่อรองรับปุ่ม dashboard */
 }
 
 .filter-btn {
@@ -85,6 +85,18 @@
     background-color: #007aff;
     color: white;
     border-color: #007aff;
+}
+
+/* สไตล์สำหรับปุ่ม dashboard */
+.dashboard-btn {
+    background-color: #34c759; /* สีเขียวของ iOS */
+    color: white;
+    border-color: #34c759;
+}
+
+.dashboard-btn:hover {
+    background-color: #30b955; /* สีเขียวเข้มขึ้นเล็กน้อยเมื่อ hover */
+    border-color: #30b955;
 }
 
 /* ส่วนหัวข้อและกรอง */

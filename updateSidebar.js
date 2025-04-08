@@ -3,12 +3,54 @@ function checkIsMobile() {
     return window.innerWidth <= 768;
 }
 
-// ฟังก์ชันแปลงเวลาให้อยู่ในรูปแบบ "ชั่วโมง:นาที"
-function formatFlightHours(hours) {
+// ฟังก์ชันแสดงค่าเวลาสำหรับเครื่องบิน SKA (ไม่แปลงเป็นรูปแบบเวลา แต่แสดงเป็นตัวเลขทศนิยม)
+function formatSKATime(timeStr) {
+    if (!timeStr) return "0";
+    
+    console.log("formatSKATime input:", timeStr);
+    
+    try {
+        // ถ้าเป็นรูปแบบ XX:XX
+        if (typeof timeStr === 'string' && timeStr.includes(':')) {
+            const parts = timeStr.split(':');
+            if (parts.length === 2) {
+                const hours = parseInt(parts[0], 10);
+                const minutes = parseInt(parts[1], 10);
+                
+                if (!isNaN(hours) && !isNaN(minutes)) {
+                    // แปลงนาทีเป็นทศนิยม (เช่น 30 นาที = 0.5)
+                    const decimal = minutes / 60;
+                    // ปัดทศนิยมให้เหลือ 1 ตำแหน่ง
+                    const result = (hours + decimal).toFixed(1);
+                    console.log(`Converted ${timeStr} to ${result}`);
+                    return result;
+                }
+            }
+        } else if (typeof timeStr === 'string' && timeStr.includes('.')) {
+            // ถ้าเป็นรูปแบบ XX.XX อยู่แล้ว ให้ปัดทศนิยมให้เหลือ 1 ตำแหน่ง
+            const numValue = parseFloat(timeStr);
+            if (!isNaN(numValue)) {
+                return numValue.toFixed(1);
+            }
+        } else if (!isNaN(parseFloat(timeStr))) {
+            // ถ้าเป็นตัวเลข ให้ปัดทศนิยมให้เหลือ 1 ตำแหน่ง
+            return parseFloat(timeStr).toFixed(1);
+        }
+        
+        // ถ้าไม่ใช่รูปแบบที่รองรับ ให้คืนค่าเดิม
+        return timeStr;
+    } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการแปลงเวลา SKA:", error);
+        return timeStr;
+    }
+}
+
+// ฟังก์ชันแปลงเวลาให้อยู่ในรูปแบบ "ชั่วโมง:นาที" โดยไม่มีการปัดเศษ
+function formatFlightHours(hours, isSKA = false) {
     if (hours === undefined || hours === null) return "0:00";
 
     try {
-        console.log("formatFlightHours input:", hours, typeof hours);
+        console.log("formatFlightHours input:", hours, typeof hours, isSKA ? "(SKA)" : "");
 
         // ถ้าเป็นสตริงที่มีรูปแบบ "HH:MM" อยู่แล้ว
         if (typeof hours === 'string' && hours.includes(':')) {
@@ -19,9 +61,17 @@ function formatFlightHours(hours) {
                 const m = parseInt(parts[1], 10);
 
                 if (!isNaN(h) && !isNaN(m)) {
-                    // ถ้ารูปแบบถูกต้อง ให้คืนค่าเดิม
-                    console.log("Returning original HH:MM format:", hours);
-                    return hours;
+                    // ถ้ารูปแบบถูกต้อง แต่ต้องตรวจสอบว่านาทีอยู่ในช่วง 0-59
+                    if (m >= 0 && m < 60) {
+                        console.log("Returning original HH:MM format:", hours);
+                        return `${h}:${m.toString().padStart(2, '0')}`;
+                    } else {
+                        // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
+                        const extraHours = Math.floor(m / 60);
+                        const adjustedMinutes = m % 60;
+                        console.log(`Adjusted ${hours} to ${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`);
+                        return `${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
+                    }
                 }
             }
         }
@@ -31,13 +81,46 @@ function formatFlightHours(hours) {
             const parts = hours.split('.');
             if (parts.length === 2) {
                 const h = parseInt(parts[0], 10);
-                // แปลงทศนิยมเป็นนาที (เช่น .4 = 24 นาที)
-                const decimalPart = parseFloat(`0.${parts[1]}`);
-                const m = Math.round(decimalPart * 60);
+                
+                // สำหรับเครื่องบิน SKA ทศนิยม .5 หมายถึง 30 นาที (ครึ่งชั่วโมง)
+                if (isSKA) {
+                    // แปลงทศนิยมเป็นนาที (.5 = 30 นาที)
+                    // เต็ม 10 (1.0) เท่ากับ 60 นาที
+                    const decimalPart = parseFloat(`0.${parts[1]}`);
+                    const m = Math.round(decimalPart * 60);
+                    
+                    if (!isNaN(h) && !isNaN(m)) {
+                        // ตรวจสอบว่านาทีอยู่ในช่วง 0-59
+                        if (m >= 0 && m < 60) {
+                            console.log(`Converted SKA ${hours} to ${h}:${m.toString().padStart(2, '0')}`);
+                            return `${h}:${m.toString().padStart(2, '0')}`;
+                        } else {
+                            // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
+                            const extraHours = Math.floor(m / 60);
+                            const adjustedMinutes = m % 60;
+                            console.log(`Adjusted SKA ${hours} to ${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`);
+                            return `${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
+                        }
+                    }
+                } else {
+                    // สำหรับเครื่องบินทั่วไป ทศนิยมเป็นเศษส่วนของชั่วโมง (เช่น .4 = 24 นาที)
+                    const decimalPart = parseFloat(`0.${parts[1]}`);
+                    // ใช้ Math.trunc เพื่อตัดเศษทิ้งทั้งหมด
+                    const m = Math.trunc(decimalPart * 60);
 
-                if (!isNaN(h) && !isNaN(m)) {
-                    console.log(`Converted ${hours} to ${h}:${m.toString().padStart(2, '0')}`);
-                    return `${h}:${m.toString().padStart(2, '0')}`;
+                    if (!isNaN(h) && !isNaN(m)) {
+                        // ตรวจสอบว่านาทีอยู่ในช่วง 0-59
+                        if (m >= 0 && m < 60) {
+                            console.log(`Converted ${hours} to ${h}:${m.toString().padStart(2, '0')}`);
+                            return `${h}:${m.toString().padStart(2, '0')}`;
+                        } else {
+                            // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
+                            const extraHours = Math.floor(m / 60);
+                            const adjustedMinutes = m % 60;
+                            console.log(`Adjusted ${hours} to ${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`);
+                            return `${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
+                        }
+                    }
                 }
             }
         }
@@ -46,19 +129,47 @@ function formatFlightHours(hours) {
         const numHours = parseFloat(hours);
         if (isNaN(numHours)) return "0:00";
 
-        // แยกส่วนชั่วโมงและนาที
-        const h = Math.floor(numHours);
-        const m = Math.floor((numHours - h) * 60); // ใช้ Math.floor แทน Math.round เพื่อให้ได้ค่าที่ถูกต้อง
+        // สำหรับเครื่องบิน SKA ทศนิยม .5 หมายถึง 30 นาที (ครึ่งชั่วโมง)
+        if (isSKA) {
+            // แยกส่วนชั่วโมงและทศนิยม
+            const h = Math.floor(numHours);
+            const decimal = numHours - h;
+            
+            // แปลงทศนิยมเป็นนาที (.5 = 30 นาที)
+            // เต็ม 10 (1.0) เท่ากับ 60 นาที
+            const m = Math.round(decimal * 60);
+            
+            console.log(`Calculated from SKA ${numHours}: hours=${h}, minutes=${m}`);
+            
+            // ตรวจสอบว่านาทีอยู่ในช่วง 0-59
+            if (m >= 0 && m < 60) {
+                return `${h}:${m.toString().padStart(2, '0')}`;
+            } else {
+                // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
+                const extraHours = Math.floor(m / 60);
+                const adjustedMinutes = m % 60;
+                return `${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
+            }
+        } else {
+            // สำหรับเครื่องบินทั่วไป ทศนิยมเป็นเศษส่วนของชั่วโมง
+            // แยกส่วนชั่วโมงและนาที โดยไม่ปัดเศษ
+            const h = Math.floor(numHours);
+            // ใช้ Math.trunc เพื่อตัดเศษทิ้งทั้งหมด
+            const m = Math.trunc((numHours - h) * 60);
 
-        console.log(`Calculated from ${numHours}: hours=${h}, minutes=${m}`);
+            console.log(`Calculated from ${numHours}: hours=${h}, minutes=${m}`);
 
-        // ถ้านาทีเป็น 60 ให้ปรับเป็นชั่วโมงถัดไป
-        if (m === 60) {
-            return `${h + 1}:00`;
+            // ตรวจสอบว่านาทีอยู่ในช่วง 0-59
+            if (m >= 0 && m < 60) {
+                return `${h}:${m.toString().padStart(2, '0')}`;
+            } else {
+                // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
+                const extraHours = Math.floor(m / 60);
+                const adjustedMinutes = m % 60;
+                console.log(`Adjusted to ${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`);
+                return `${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
+            }
         }
-
-        // รูปแบบ "H:MM"
-        return `${h}:${m.toString().padStart(2, '0')}`;
     } catch (error) {
         console.error("เกิดข้อผิดพลาดในการจัดรูปแบบเวลา:", error);
         return "0:00";
@@ -241,8 +352,21 @@ window.updateSidebar = async function(flight) {
     if (flight.aCheck) {
         console.log("Original aCheck value:", flight.aCheck, typeof flight.aCheck);
 
+        // ตรวจสอบว่าเป็นเครื่องบิน SKA หรือไม่
+        const isSKA = flight.name && (flight.name.toUpperCase().includes("SKA") || flight.name.toUpperCase().includes("SUPER KING AIR"));
+        
+        // สำหรับเครื่องบิน SKA ให้แปลงค่าเวลาจากรูปแบบ XX:XX เป็นทศนิยม
+        if (isSKA && typeof flight.aCheck === 'string' && flight.aCheck.includes(':')) {
+            const [hours, minutes] = flight.aCheck.split(':').map(Number);
+            // แปลงนาทีเป็นทศนิยม (เช่น 30 นาที = 0.5)
+            const decimal = minutes / 60;
+            // ปัดทศนิยมให้เหลือ 1 ตำแหน่ง
+            flight.rawACheck = (hours + decimal).toFixed(1);
+            console.log(`Converted SKA ${flight.aCheck} to decimal: ${flight.rawACheck}`);
+            aCheckValue = hours + decimal;
+        }
         // ถ้าเป็นรูปแบบ "HH:MM" ให้แปลงเป็นทศนิยม
-        if (typeof flight.aCheck === 'string' && flight.aCheck.includes(':')) {
+        else if (typeof flight.aCheck === 'string' && flight.aCheck.includes(':')) {
             const [hours, minutes] = flight.aCheck.split(':').map(Number);
             aCheckValue = hours + (minutes / 60);
             console.log(`Converted ${flight.aCheck} to decimal: ${aCheckValue}`);
@@ -266,8 +390,21 @@ window.updateSidebar = async function(flight) {
     if (flight.remainingHours) {
         console.log("Original remainingHours value:", flight.remainingHours, typeof flight.remainingHours);
 
+        // ตรวจสอบว่าเป็นเครื่องบิน SKA หรือไม่
+        const isSKA = flight.name && (flight.name.toUpperCase().includes("SKA-350") || flight.name.toUpperCase().includes("SUPER KING AIR"));
+        
+        // สำหรับเครื่องบิน SKA ให้แปลงค่าเวลาจากรูปแบบ XX:XX เป็นทศนิยม
+        if (isSKA && typeof flight.remainingHours === 'string' && flight.remainingHours.includes(':')) {
+            const [hours, minutes] = flight.remainingHours.split(':').map(Number);
+            // แปลงนาทีเป็นทศนิยม (เช่น 30 นาที = 0.5)
+            const decimal = minutes / 60;
+            // ปัดทศนิยมให้เหลือ 1 ตำแหน่ง
+            flight.rawFlightHours = (hours + decimal).toFixed(1);
+            console.log(`Converted SKA ${flight.remainingHours} to decimal: ${flight.rawFlightHours}`);
+            remainingHoursValue = hours + decimal;
+        }
         // ถ้าเป็นรูปแบบ "HH:MM" ให้แปลงเป็นทศนิยม
-        if (typeof flight.remainingHours === 'string' && flight.remainingHours.includes(':')) {
+        else if (typeof flight.remainingHours === 'string' && flight.remainingHours.includes(':')) {
             const [hours, minutes] = flight.remainingHours.split(':').map(Number);
             remainingHoursValue = hours + (minutes / 60);
             console.log(`Converted ${flight.remainingHours} to decimal: ${remainingHoursValue}`);
@@ -280,6 +417,8 @@ window.updateSidebar = async function(flight) {
 
     // คำนวณชั่วโมงคงเหลือ (aCheck - remainingHours)
     let remainingHours = 0;
+    
+    // ตรวจสอบว่ามีค่า aCheckDue หรือไม่
     if (flight.aCheckDue) {
         console.log("Using aCheckDue value:", flight.aCheckDue);
 
@@ -293,7 +432,39 @@ window.updateSidebar = async function(flight) {
             remainingHours = parseFloat(flight.aCheckDue) || 0;
             console.log(`Parsed aCheckDue: ${remainingHours}`);
         }
-    } else {
+    } 
+    // ตรวจสอบว่ามีค่าชั่วโมงบินคงเหลือครบซ่อมตามประเภทเครื่องบิน
+    else if (flight.type === 'helicopter' && flight["ชั่วโมงบินคงเหลือครบซ่อม 100"] && maxHours === 100) {
+        const timeStr = flight["ชั่วโมงบินคงเหลือครบซ่อม 100"];
+        if (typeof timeStr === 'string' && timeStr.includes(':')) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            remainingHours = hours + (minutes / 60);
+            console.log(`Using helicopter 100 hours: ${timeStr}, converted to: ${remainingHours}`);
+        } else {
+            remainingHours = parseFloat(timeStr) || 0;
+        }
+    }
+    else if (flight.type === 'helicopter' && flight["ชั่วโมงบินคงเหลือครบซ่อม 150"] && maxHours === 150) {
+        const timeStr = flight["ชั่วโมงบินคงเหลือครบซ่อม 150"];
+        if (typeof timeStr === 'string' && timeStr.includes(':')) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            remainingHours = hours + (minutes / 60);
+            console.log(`Using helicopter 150 hours: ${timeStr}, converted to: ${remainingHours}`);
+        } else {
+            remainingHours = parseFloat(timeStr) || 0;
+        }
+    }
+    else if (flight.type === 'helicopter' && flight["ชั่วโมงบินคงเหลือครบซ่อม 300"] && maxHours === 300) {
+        const timeStr = flight["ชั่วโมงบินคงเหลือครบซ่อม 300"];
+        if (typeof timeStr === 'string' && timeStr.includes(':')) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            remainingHours = hours + (minutes / 60);
+            console.log(`Using helicopter 300 hours: ${timeStr}, converted to: ${remainingHours}`);
+        } else {
+            remainingHours = parseFloat(timeStr) || 0;
+        }
+    }
+    else {
         // ถ้าไม่มี ให้คำนวณจาก aCheck - remainingHours
         remainingHours = Math.max(0, aCheckValue - remainingHoursValue);
         console.log(`Calculated remainingHours: ${aCheckValue} - ${remainingHoursValue} = ${remainingHours}`);
@@ -351,8 +522,19 @@ window.updateSidebar = async function(flight) {
         const aircraftNumber = flight.aircraftNumber || "ไม่ระบุ";
         const missionBase = flight.missionBase || "ไม่ระบุ";
 
-        // ใช้ค่าดิบจาก flight.remainingHours ถ้ามี
-        const remainingHoursDisplay = flight.remainingHours || "0";
+        // ใช้ค่า remainingHours ที่คำนวณแล้ว แปลงเป็นรูปแบบ "ชั่วโมง:นาที"
+        const remainingHoursDisplay = flight.remainingHours || remainingHoursValue || "0";
+        
+        // ตรวจสอบว่าเป็นเครื่องบิน SKA หรือไม่
+        const isSKA = flight.name && (flight.name.toUpperCase().includes("SKA") || flight.name.toUpperCase().includes("SUPER KING AIR"));
+        
+        // แสดงค่าดิบที่ได้รับมาเพื่อตรวจสอบ
+        console.log(`ข้อมูลเครื่องบินหมายเลข ${aircraftNumber} ในไซด์บาร์:`, {
+            "ประเภท": isSKA ? "SKA (XX.X)" : "ทั่วไป",
+            "ชั่วโมงเครื่องบิน (ที่แสดง)": remainingHoursDisplay,
+            "ชั่วโมงเครื่องบิน (ดิบ)": flight.rawFlightHours || flight.remainingHours,
+            "A CHECK (ดิบ)": flight.rawACheck || flight.aCheck
+        });
 
         // ใช้ค่าดิบจาก flight.engineLH และ flight.engineRH ถ้ามี
         const engineLH = flight.engineLH || "0";
@@ -385,27 +567,27 @@ window.updateSidebar = async function(flight) {
             <div class="maintenance-chart">
                 <div class="chart-header">
                     <h3>สถานะการซ่อมบำรุง</h3>
-                    <span class="chart-value">ครบซ่อม ${flight.aCheck || formatFlightHours(aCheckValue)} / ${maxHours} ชม. (${aCheckPercentage.toFixed(1)}%)</span>
+                    <span class="chart-value">ครบซ่อม ${isSKA ? (flight.rawACheck || aCheckValue) : formatFlightHours(aCheckValue)} / ${maxHours} ชม. (${aCheckPercentage.toFixed(1)}%)</span>
                 </div>
                 <div class="chart-container">
                     <div class="donut-chart" style="--percentage: ${displayPercentage}; --color: ${barColor};">
                         <div class="chart-center">
-                            <span>${flight.aCheckDue || formatFlightHours(remainingHours)}</span>
+                            <span>${isSKA ? (flight.rawFlightHours || remainingHours) : formatFlightHours(remainingHours)}</span>
                             <small>ชม.</small>
                         </div>
                     </div>
                     <div class="chart-info">
                         <div class="chart-detail">
                             <span class="detail-label">100 ชม.</span>
-                            <span class="detail-value">${flight.aCheckDue ? flight.aCheckDue.split(' ')[0] : '_'}</span>
+                            <span class="detail-value">${flight["ชั่วโมงบินคงเหลือครบซ่อม 100"] ? (isSKA ? flight["ชั่วโมงบินคงเหลือครบซ่อม 100"] : formatFlightHours(flight["ชั่วโมงบินคงเหลือครบซ่อม 100"])) : '_'}</span>
                         </div>
                         <div class="chart-detail">
                             <span class="detail-label">150 ชม.</span>
-                            <span class="detail-value">${flight.aCheckDue ? flight.aCheckDue.split(' ')[1] : '_'}</span>
+                            <span class="detail-value">${flight["ชั่วโมงบินคงเหลือครบซ่อม 150"] ? (isSKA ? flight["ชั่วโมงบินคงเหลือครบซ่อม 150"] : formatFlightHours(flight["ชั่วโมงบินคงเหลือครบซ่อม 150"])) : '_'}</span>
                         </div>
                         <div class="chart-detail">
                             <span class="detail-label">300 ชม.</span>
-                            <span class="detail-value">${flight.aCheckDue ? flight.aCheckDue.split(' ')[2] || '187:00' : '187:00'}</span>
+                            <span class="detail-value">${flight["ชั่วโมงบินคงเหลือครบซ่อม 300"] ? (isSKA ? flight["ชั่วโมงบินคงเหลือครบซ่อม 300"] : formatFlightHours(flight["ชั่วโมงบินคงเหลือครบซ่อม 300"])) : '_'}</span>
                         </div>
                     </div>
                 </div>
@@ -418,7 +600,7 @@ window.updateSidebar = async function(flight) {
                     </div>
                     <div class="info-content">
                         <span class="info-label">ชั่วโมงบิน</span>
-                        <span class="info-value">${formatFlightHours(remainingHoursDisplay)}</span>
+                        <span class="info-value">${isSKA ? (flight.rawFlightHours || remainingHoursDisplay) : (flight.rawFlightHours || (typeof remainingHoursDisplay === 'string' && remainingHoursDisplay.includes(':') ? remainingHoursDisplay : formatFlightHours(remainingHoursDisplay)))}</span>
                     </div>
                 </div>
 
@@ -438,7 +620,7 @@ window.updateSidebar = async function(flight) {
                 <h3><i class="fas fa-helicopter"></i> ชั่วโมงบินเฮลิคอปเตอร์</h3>
                 <div class="flight-hours">
                     <div class="info-card-content">
-                        <div class="info-value">${formatFlightHours(remainingHoursDisplay)}</div>
+                        <div class="info-value">${typeof remainingHoursDisplay === 'string' && remainingHoursDisplay.includes(':') ? remainingHoursDisplay : formatFlightHours(remainingHoursDisplay)}</div>
                         <div class="info-label">ชั่วโมงบินทั้งหมด</div>
                     </div>
                 </div>
@@ -449,11 +631,11 @@ window.updateSidebar = async function(flight) {
                 <div class="engine-grid">
                     <div class="engine-card">
                         <div class="engine-title">No.1 / LH</div>
-                        <div class="engine-hours">${formatFlightHours(engineLH)} <small>ชม.</small></div>
+                        <div class="engine-hours">${isSKA ? engineLH : (typeof engineLH === 'string' && engineLH.includes(':') ? engineLH : formatFlightHours(engineLH))} <small>ชม.</small></div>
                     </div>
                     <div class="engine-card">
                         <div class="engine-title">No.2 / RH</div>
-                        <div class="engine-hours">${formatFlightHours(engineRH)} <small>ชม.</small></div>
+                        <div class="engine-hours">${isSKA ? engineRH : (typeof engineRH === 'string' && engineRH.includes(':') ? engineRH : formatFlightHours(engineRH))} <small>ชม.</small></div>
                     </div>
                 </div>
             </div>
