@@ -237,6 +237,75 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
 });
 
+// ฟังก์ชันค้นหาเครื่องบินตามหมายเลข, ชื่อ, หรือภารกิจ/ฐานที่ตั้ง
+function filterAircraftByNumberOrNameOrMission(searchText) {
+    console.log("กำลังค้นหา:", searchText);
+    
+    // ดึงรายการเครื่องบินทั้งหมด
+    const aircraftItems = document.querySelectorAll(".aircraft-item");
+    
+    // ถ้าไม่มีข้อความค้นหา ให้แสดงทั้งหมด
+    if (!searchText) {
+        aircraftItems.forEach(item => {
+            item.style.display = "flex";
+        });
+        return;
+    }
+    
+    // แยกคำค้นหาออกเป็นคำย่อยๆ เมื่อมีช่องว่าง
+    const searchTerms = searchText.split(/\s+/).filter(term => term.length > 0);
+    
+    let availableCount = 0;
+    let unavailableCount = 0;
+    
+    // ค้นหาในแต่ละรายการ
+    aircraftItems.forEach(item => {
+        // ดึงข้อมูลที่ต้องการค้นหา
+        const aircraftNumber = item.querySelector(".aircraft-number").textContent.toLowerCase();
+        const aircraftName = item.querySelector(".aircraft-name").textContent.toLowerCase();
+        
+        // ดึงข้อมูลภารกิจ/ฐานที่ตั้ง และข้อมูลอื่นๆ
+        const infoValues = item.querySelectorAll(".info-value");
+        let infoTexts = [];
+        infoValues.forEach(info => {
+            infoTexts.push(info.textContent.toLowerCase());
+        });
+        
+        // รวมข้อมูลทั้งหมดเพื่อค้นหา
+        const allText = [aircraftNumber, aircraftName, ...infoTexts].join(" ");
+        
+        let matchFound = false;
+        
+        // ตรวจสอบแบบปกติ (ค้นหาทั้งประโยค)
+        if (allText.includes(searchText.toLowerCase())) {
+            matchFound = true;
+        } else if (searchTerms.length > 1) {
+            // ตรวจสอบแบบคำต่อคำ (ค้นหาแต่ละคำ)
+            const allTermsMatch = searchTerms.every(term => allText.includes(term.toLowerCase()));
+            if (allTermsMatch) {
+                matchFound = true;
+            }
+        }
+        
+        // แสดงหรือซ่อนตามผลการค้นหา
+        if (matchFound) {
+            item.style.display = "flex";
+            
+            // นับจำนวนเครื่องบินที่พร้อมใช้งานและไม่พร้อมใช้งาน
+            if (item.classList.contains("available")) {
+                availableCount++;
+            } else {
+                unavailableCount++;
+            }
+        } else {
+            item.style.display = "none";
+        }
+    });
+    
+    // อัปเดตสรุปจำนวนเครื่องบิน
+    updateStatusSummary(availableCount, unavailableCount);
+}
+
 
 
 // ฟังก์ชันตั้งค่าตัวเลือกวันที่
@@ -967,7 +1036,7 @@ const provinceCoordinates = {
     "อุดรธานี": [17.3869, 102.7883], // ท่าอากาศยานนานาชาติอุดรธานี
     "อุตรดิตถ์": [17.6317, 100.0950], // ไม่มีสนามบิน
     "อุทัยธานี": [15.3796, 99.9066], // ไม่มีสนามบิน
-    "สนามบินคลองหลวง": [13.8499, 100.5750] // สนามบินคลองหลวง (กรมฝนหลวงและการบินเกษตร)
+    "สนามบินคลองหลวง": [14.11994317780348, 100.62058030298614] // สนามบินคลองหลวง (กรมฝนหลวงและการบินเกษตร)
 };
 
 

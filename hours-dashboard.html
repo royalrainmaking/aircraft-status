@@ -554,7 +554,7 @@
 <body>
     <header>
         <div class="container">
-            <h1>ชั่วโมงบินคงเหลือ - Dashboard</h1>
+            <h1>สถาณะรายวัน อากาศยานกรมฝนหลวงและการบินเกษตร</h1>
             <a href="index.html" class="back-button"><i class="fas fa-arrow-left"></i> กลับไปหน้าหลัก</a>
         </div>
     </header>
@@ -567,12 +567,13 @@
             
             <div class="filter-controls">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="ค้นหา...">
-                    <button id="searchBtn"><i class="fas fa-search"></i></button>
+                    <input type="text" id="searchInput" placeholder="ค้นหา..." autocomplete="off">
                 </div>
                 <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> ทั้งหมด</button>
                 <button class="filter-btn" data-filter="available"><i class="fas fa-check-circle"></i> พร้อมใช้งาน</button>
                 <button class="filter-btn" data-filter="unavailable"><i class="fas fa-times-circle"></i> ไม่พร้อมใช้งาน</button>
+                <button class="filter-btn" data-filter="aircraft"><i class="fas fa-plane"></i> เครื่องบิน</button>
+                <button class="filter-btn" data-filter="helicopter"><i class="fas fa-helicopter"></i> เฮลิคอปเตอร์</button>
             </div>
         </div>
 
@@ -866,123 +867,131 @@
         function setupDateSelector() {
             const dateSelector = document.getElementById('dateSelector');
             const resetDateBtn = document.getElementById('resetDateBtn');
-
-            if (dateSelector) {
+            
+            if (!dateSelector) {
+                console.error('Date selector not found');
+                return;
+            }
+            
+            try {
                 // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
                 const today = new Date();
                 const formattedDate = today.toISOString().split('T')[0];
                 dateSelector.value = formattedDate;
-
-                // เพิ่ม event listener สำหรับการเปลี่ยนวันที่
-                dateSelector.addEventListener('change', async function() {
-                    const selectedDate = dateSelector.value;
-                    console.log(`เลือกวันที่: ${selectedDate}`);
-
-                    try {
-                        // แสดงข้อความกำลังโหลด
-                        document.getElementById("dashboard").innerHTML = "<div class='loading'>กำลังโหลดข้อมูล...</div>";
-                        
-                        // ซ่อนข้อความแจ้งเตือน
-                        document.getElementById("errorMessage").style.display = "none";
-
-                        // โหลดข้อมูลตามวันที่ที่เลือก
-                        await fetchFlightData(selectedDate);
-                        
-                        // สร้าง dashboard ใหม่
-                        renderDashboard();
-                    } catch (error) {
-                        console.error("❌ โหลดข้อมูลไม่สำเร็จ:", error);
-                        
-                        // แสดงข้อความแจ้งเตือนที่เฉพาะเจาะจงมากขึ้น
-                        let errorMsg = "ไม่สามารถโหลดข้อมูลได้";
-                        
-                        if (error.message.includes("ไม่พบข้อมูลสำหรับวันที่")) {
-                            errorMsg = `ไม่พบข้อมูลสำหรับวันที่ ${selectedDate} กรุณาเลือกวันที่อื่น`;
-                            
-                            // ดึงรายการวันที่ที่มีข้อมูลจาก localStorage
-                            const allDatesKey = 'allCachedDates';
-                            let availableDatesForUser = [];
-                            try {
-                                const cachedDates = localStorage.getItem(allDatesKey);
-                                if (cachedDates) {
-                                    availableDatesForUser = JSON.parse(cachedDates);
-                                    availableDatesForUser.sort(); // เรียงลำดับวันที่
-                                }
-                            } catch (e) {
-                                console.error("ไม่สามารถดึงรายการวันที่ได้:", e);
-                            }
-                            
-                            // สร้างรายการวันที่ที่มีข้อมูลให้ผู้ใช้เลือก
-                            let dateButtons = '';
-                            if (availableDatesForUser.length > 0) {
-                                // แสดงเฉพาะ 5 วันล่าสุด
-                                const recentDates = availableDatesForUser.slice(-5).reverse();
-                                dateButtons = recentDates.map(date => 
-                                    `<button class="available-date-btn" onclick="document.getElementById('dateSelector').value='${date}'; document.getElementById('dateSelector').dispatchEvent(new Event('change'));">
-                                        ${date}
-                                    </button>`
-                                ).join('');
-                            }
-                            
-                            // แสดงข้อความว่าไม่พบข้อมูลในรูปแบบที่ชัดเจน
-                            document.getElementById("dashboard").innerHTML = `
-                                <div style="text-align: center; padding: 50px;">
-                                    <div style="font-size: 3rem; color: #ccc; margin-bottom: 20px;">
-                                        <i class="fas fa-calendar-times"></i>
-                                    </div>
-                                    <div style="font-size: 1.2rem; color: var(--text-secondary);">
-                                        ไม่พบข้อมูลสำหรับวันที่ ${selectedDate}
-                                    </div>
-                                    <div style="margin-top: 10px; margin-bottom: 20px; color: var(--text-secondary);">
-                                        กรุณาเลือกวันที่อื่น หรือกดปุ่ม "รีเซ็ตเป็นวันนี้" เพื่อดูข้อมูลล่าสุด
-                                    </div>
-                                    ${availableDatesForUser.length > 0 ? `
-                                        <div style="margin-top: 20px;">
-                                            <div style="margin-bottom: 10px; color: var(--text-secondary);">
-                                                <i class="fas fa-calendar-check"></i> วันที่มีข้อมูล:
-                                            </div>
-                                            <div class="available-dates">
-                                                ${dateButtons}
-                                            </div>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            `;
-                            
-                            // เพิ่ม CSS สำหรับปุ่มวันที่
-                            const style = document.createElement('style');
-                            style.textContent = `
-                                .available-dates {
-                                    display: flex;
-                                    flex-wrap: wrap;
-                                    justify-content: center;
-                                    gap: 10px;
-                                    margin-top: 10px;
-                                }
-                                .available-date-btn {
-                                    background-color: var(--primary-color);
-                                    color: white;
-                                    border: none;
-                                    padding: 8px 15px;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                    transition: background-color 0.3s;
-                                }
-                                .available-date-btn:hover {
-                                    background-color: var(--secondary-color);
-                                }
-                            `;
-                            document.head.appendChild(style);
-                        } else if (error.message.includes("NetworkError") || error.message.includes("Failed to fetch")) {
-                            errorMsg = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต";
-                        }
-                        
-                        document.getElementById("errorMessage").textContent = errorMsg;
-                        document.getElementById("errorMessage").style.display = "block";
-                        document.getElementById("dashboard").innerHTML = "";
-                    }
-                });
+            } catch (error) {
+                console.error('Error setting initial date:', error);
             }
+
+            // เพิ่ม event listener สำหรับการเปลี่ยนวันที่
+            dateSelector.addEventListener('change', async function() {
+                const selectedDate = dateSelector.value;
+                console.log(`เลือกวันที่: ${selectedDate}`);
+
+                try {
+                    // ล้างพื้นที่สำหรับแสดงข้อมูลใหม่
+                    document.getElementById("dashboard").innerHTML = "";
+                    
+                    // ซ่อนข้อความแจ้งเตือน
+                    document.getElementById("errorMessage").style.display = "none";
+
+                    // โหลดข้อมูลตามวันที่ที่เลือก
+                    await fetchFlightData(selectedDate);
+                    
+                    // สร้าง dashboard ใหม่
+                    renderDashboard();
+                } catch (error) {
+                    console.error("❌ โหลดข้อมูลไม่สำเร็จ:", error);
+                    
+                    // แสดงข้อความแจ้งเตือนที่เฉพาะเจาะจงมากขึ้น
+                    let errorMsg = "ไม่สามารถโหลดข้อมูลได้";
+                    let availableDatesForUser = [];
+                    
+                    // ตรวจสอบประเภทของข้อผิดพลาด
+                    if (error.message && error.message.includes("ไม่พบข้อมูลสำหรับวันที่")) {
+                        errorMsg = `ไม่พบข้อมูลสำหรับวันที่ ${selectedDate} กรุณาเลือกวันที่อื่น`;
+                        
+                        // ดึงรายการวันที่ที่มีข้อมูลจาก localStorage
+                        const allDatesKey = 'allCachedDates';
+                        try {
+                            const cachedDates = localStorage.getItem(allDatesKey);
+                            if (cachedDates) {
+                                availableDatesForUser = JSON.parse(cachedDates);
+                                availableDatesForUser.sort(); // เรียงลำดับวันที่
+                            }
+                        } catch (e) {
+                            console.error("ไม่สามารถดึงรายการวันที่ได้:", e);
+                        }
+                    } else if (error.message && (error.message.includes("NetworkError") || error.message.includes("Failed to fetch"))) {
+                        errorMsg = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต";
+                    }
+                    
+                    // สร้างรายการวันที่ที่มีข้อมูลให้ผู้ใช้เลือก
+                    let dateButtons = '';
+                    if (availableDatesForUser.length > 0) {
+                        // แสดงเฉพาะ 5 วันล่าสุด
+                        const recentDates = availableDatesForUser.slice(-5).reverse();
+                        dateButtons = recentDates.map(date => 
+                            `<button class="available-date-btn" onclick="document.getElementById('dateSelector').value='${date}'; document.getElementById('dateSelector').dispatchEvent(new Event('change'));">
+                                ${date}
+                            </button>`
+                        ).join('');
+                    }
+                    
+                    // แสดงข้อความว่าไม่พบข้อมูลในรูปแบบที่ชัดเจน
+                    document.getElementById("dashboard").innerHTML = `
+                        <div style="text-align: center; padding: 50px;">
+                            <div style="font-size: 3rem; color: #ccc; margin-bottom: 20px;">
+                                <i class="fas fa-calendar-times"></i>
+                            </div>
+                            <div style="font-size: 1.2rem; color: var(--text-secondary);">
+                                ไม่พบข้อมูลสำหรับวันที่ ${selectedDate}
+                            </div>
+                            <div style="margin-top: 10px; margin-bottom: 20px; color: var(--text-secondary);">
+                                กรุณาเลือกวันที่อื่น หรือกดปุ่ม "รีเซ็ตเป็นวันนี้" เพื่อดูข้อมูลล่าสุด
+                            </div>
+                            ${availableDatesForUser.length > 0 ? `
+                                <div style="margin-top: 20px;">
+                                    <div style="margin-bottom: 10px; color: var(--text-secondary);">
+                                        <i class="fas fa-calendar-check"></i> วันที่มีข้อมูล:
+                                    </div>
+                                    <div class="available-dates">
+                                        ${dateButtons}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    // เพิ่ม CSS สำหรับปุ่มวันที่
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        .available-dates {
+                            display: flex;
+                            flex-wrap: wrap;
+                            justify-content: center;
+                            gap: 10px;
+                            margin-top: 10px;
+                        }
+                        .available-date-btn {
+                            background-color: var(--primary-color);
+                            color: white;
+                            border: none;
+                            padding: 8px 15px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            transition: background-color 0.3s;
+                        }
+                        .available-date-btn:hover {
+                            background-color: var(--secondary-color);
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    document.getElementById("errorMessage").textContent = errorMsg;
+                    document.getElementById("errorMessage").style.display = "block";
+                    document.getElementById("dashboard").innerHTML = "";
+                }
+            });
 
             if (resetDateBtn) {
                 // เพิ่ม event listener สำหรับปุ่มรีเซ็ตวันที่
@@ -993,8 +1002,8 @@
                     dateSelector.value = formattedDate;
 
                     try {
-                        // แสดงข้อความกำลังโหลด
-                        document.getElementById("dashboard").innerHTML = "<div class='loading'>กำลังโหลดข้อมูลวันนี้...</div>";
+                        // ล้างพื้นที่สำหรับแสดงข้อมูลใหม่
+                        document.getElementById("dashboard").innerHTML = "";
                         
                         // ซ่อนข้อความแจ้งเตือน
                         document.getElementById("errorMessage").style.display = "none";
@@ -1134,24 +1143,7 @@
                                 let rowDate = row.c[0].v;
                                 
                                 // แปลงวันที่ให้เป็นรูปแบบ YYYY-MM-DD
-                                if (rowDate instanceof Date) {
-                                    const year = rowDate.getFullYear();
-                                    const month = String(rowDate.getMonth() + 1).padStart(2, '0');
-                                    const day = String(rowDate.getDate()).padStart(2, '0');
-                                    rowDate = `${year}-${month}-${day}`;
-                                } else if (typeof rowDate === 'string') {
-                                    // แปลงรูปแบบวันที่ต่างๆ เป็น YYYY-MM-DD
-                                    if (rowDate.includes('/')) {
-                                        const parts = rowDate.split('/');
-                                        if (parts.length === 3) {
-                                            const day = parts[0].padStart(2, '0');
-                                            const month = parts[1].padStart(2, '0');
-                                            let year = parts[2];
-                                            if (year.length === 2) year = `20${year}`;
-                                            rowDate = `${year}-${month}-${day}`;
-                                        }
-                                    }
-                                }
+                                rowDate = formatDate(rowDate);
 
                                 // ตรวจสอบว่าวันที่ตรงกันหรือไม่
                                 if (rowDate === selectedDate) {
@@ -1210,6 +1202,12 @@
                                     if (rowDate) {
                                         availableDates.push(rowDate);
                                         dateRows.push({ date: rowDate, row: row });
+                                        
+                                        // ตรวจสอบอีกครั้งว่าวันที่ตรงกับที่เลือกหรือไม่
+                                        if (rowDate === selectedDate) {
+                                            console.log(`🔍 พบข้อมูลสำหรับวันที่ ${selectedDate} ในการตรวจสอบรอบที่ 2`);
+                                            foundRow = row;
+                                        }
                                     }
                                 }
                             }
@@ -1220,6 +1218,13 @@
                             
                             if (availableDates.length > 0) {
                                 console.log(`📅 วันที่ที่มีข้อมูล: ${availableDates.join(', ')}`);
+                            }
+                            
+                            // ถ้าพบข้อมูลในการตรวจสอบรอบที่ 2
+                            if (foundRow) {
+                                console.log(`✅ พบข้อมูลสำหรับวันที่ ${selectedDate} ในการตรวจสอบรอบที่ 2 - ประมวลผลข้อมูล`);
+                                processRowData(foundRow);
+                                return;
                             }
                             
                             // ไม่ใช้ข้อมูลจากวันที่ใกล้เคียง - ให้แสดงข้อความว่าไม่พบข้อมูล
@@ -1242,6 +1247,9 @@
                                     console.error("ไม่สามารถดึงรายการวันที่ได้:", e);
                                 }
                                 
+                                // ไม่ใช้ข้อมูลจากวันที่ใกล้เคียงหรือวันล่าสุด - ให้แสดงข้อความว่าไม่พบข้อมูล
+                                
+                                // ถ้าไม่สามารถใช้ข้อมูลล่าสุดได้ ให้แจ้งเตือนว่าไม่พบข้อมูล
                                 throw new Error(`ไม่พบข้อมูลสำหรับวันที่ ${selectedDate}`);
                             }
                         }
@@ -1311,13 +1319,13 @@
                 // ตรวจสอบว่ามีข้อมูล Sheet1 หรือไม่
                 if (jsonData.ข้อมูลSheet1 && Array.isArray(jsonData.ข้อมูลSheet1)) {
                     // ประมวลผลข้อมูลจาก Sheet1 (เครื่องบิน)
-                    processAircraftData(jsonData.ข้อมูลSheet1, "aircraft");
+                    processAircraftData(jsonData.ข้อมูลSheet1, "aircraft", dataArray);
                 }
 
                 // ตรวจสอบว่ามีข้อมูล Sheet2 (เฮลิคอปเตอร์) หรือไม่
                 if (jsonData.ข้อมูลSheet2 && Array.isArray(jsonData.ข้อมูลSheet2)) {
                     // ประมวลผลข้อมูลจาก Sheet2 (เฮลิคอปเตอร์)
-                    processAircraftData(jsonData.ข้อมูลSheet2, "helicopter");
+                    processAircraftData(jsonData.ข้อมูลSheet2, "helicopter", dataArray);
                 }
             } catch (error) {
                 console.error("❌ เกิดข้อผิดพลาดในการประมวลผลข้อมูลแถว:", error);
@@ -1325,12 +1333,15 @@
         }
 
         // ฟังก์ชันประมวลผลข้อมูลเครื่องบิน
-        function processAircraftData(aircraftArray, type) {
+        function processAircraftData(aircraftArray, type, targetArray = null) {
             if (!aircraftArray || !Array.isArray(aircraftArray) || aircraftArray.length === 0) {
                 console.error(`❌ ข้อมูล ${type} ไม่ถูกต้องหรือไม่มีข้อมูล`);
                 return;
             }
-
+            
+            // ใช้ targetArray ถ้ามีการระบุ มิฉะนั้นใช้ flightData
+            const dataArray = targetArray || flightData;
+            
             // วนลูปเพื่อเพิ่มข้อมูลเครื่องบินแต่ละลำ
             aircraftArray.forEach((aircraft) => {
                 try {
@@ -1417,6 +1428,12 @@
         function renderDashboard() {
             const dashboardContainer = document.getElementById('dashboard');
             
+            // Check if dashboard container exists
+            if (!dashboardContainer) {
+                console.error('Dashboard container not found');
+                return;
+            }
+            
             // อัปเดตข้อมูลสรุป
             let availableCount = 0;
             let unavailableCount = 0;
@@ -1427,9 +1444,17 @@
                     else unavailableCount++;
                 });
                 
-                document.getElementById('totalAircraft').textContent = flightData.length;
-                document.getElementById('availableAircraft').textContent = availableCount;
-                document.getElementById('unavailableAircraft').textContent = unavailableCount;
+                try {
+                    const totalElement = document.getElementById('totalAircraft');
+                    const availableElement = document.getElementById('availableAircraft');
+                    const unavailableElement = document.getElementById('unavailableAircraft');
+                    
+                    if (totalElement) totalElement.textContent = flightData.length;
+                    if (availableElement) availableElement.textContent = availableCount;
+                    if (unavailableElement) unavailableElement.textContent = unavailableCount;
+                } catch (error) {
+                    console.error('Error updating summary counts:', error);
+                }
             }
             
             // ตรวจสอบว่ามีข้อมูลหรือไม่
@@ -1515,6 +1540,13 @@
                 const row = document.createElement('div');
                 row.className = `dashboard-row ${index % 2 === 0 ? 'even' : ''}`;
                 row.dataset.status = aircraft.status; // เพิ่ม data attribute สำหรับการกรอง
+                
+                // เพิ่ม data attribute สำหรับประเภทเครื่องบิน (aircraft หรือ helicopter)
+                if (aircraft.type && aircraft.type.toLowerCase() === 'helicopter') {
+                    row.dataset.type = 'helicopter';
+                } else {
+                    row.dataset.type = 'aircraft';
+                }
 
                 // สร้างรูปภาพเครื่องบิน
                 const aircraftImage = document.createElement('img');
@@ -1632,8 +1664,25 @@
                                 // สำหรับ SKA-350 ใช้การคำนวณแบบคณิตศาสตร์ธรรมดา
                                 try {
                                     // แปลงข้อมูลเป็นตัวเลขทศนิยม
-                                    const current = parseFloat(aircraft.remainingHours.toString().replace(':', '.')) || 0;
-                                    const nextDay = parseFloat(nextDayAircraft.remainingHours.toString().replace(':', '.')) || 0;
+                                    let current = 0;
+                                    let nextDay = 0;
+                                    
+                                    try {
+                                        // Handle different formats safely
+                                        if (typeof aircraft.remainingHours === 'string') {
+                                            current = parseFloat(aircraft.remainingHours.replace(':', '.')) || 0;
+                                        } else if (typeof aircraft.remainingHours === 'number') {
+                                            current = aircraft.remainingHours;
+                                        }
+                                        
+                                        if (typeof nextDayAircraft.remainingHours === 'string') {
+                                            nextDay = parseFloat(nextDayAircraft.remainingHours.replace(':', '.')) || 0;
+                                        } else if (typeof nextDayAircraft.remainingHours === 'number') {
+                                            nextDay = nextDayAircraft.remainingHours;
+                                        }
+                                    } catch (e) {
+                                        console.error('Error parsing hours:', e);
+                                    }
                                     
                                     // คำนวณผลต่าง
                                     const diff = nextDay - current;
@@ -1651,15 +1700,30 @@
                             } else {
                                 // สำหรับเครื่องบินทั่วไป ใช้การคำนวณแบบ HH:MM
                                 function timeToMinutes(timeStr) {
+                                    // Check if timeStr is valid
+                                    if (!timeStr || typeof timeStr !== 'string') {
+                                        return 0;
+                                    }
+                                    
+                                    // Handle different formats
                                     const parts = timeStr.split(':');
                                     if (parts.length === 2) {
-                                        return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                                        // Make sure parts are valid numbers
+                                        const hours = parseInt(parts[0]) || 0;
+                                        const minutes = parseInt(parts[1]) || 0;
+                                        return hours * 60 + minutes;
+                                    } else if (!isNaN(timeStr)) {
+                                        // If it's just a number, treat as hours
+                                        return parseFloat(timeStr) * 60;
                                     }
                                     return 0;
                                 }
                                 
                                 // แปลงนาทีเป็นรูปแบบ HH:MM
                                 function minutesToTime(minutes) {
+                                    if (isNaN(minutes)) {
+                                        return "0:00";
+                                    }
                                     const hours = Math.floor(Math.abs(minutes) / 60);
                                     const mins = Math.abs(minutes) % 60;
                                     return `${hours}:${mins.toString().padStart(2, '0')}`;
@@ -1695,7 +1759,7 @@
                 
                 const missionLabel = document.createElement('span');
                 missionLabel.className = 'info-label';
-                missionLabel.textContent = 'ฐาน:';
+                missionLabel.textContent = 'ภาระกิจ:';
                 
                 const missionValue = document.createElement('span');
                 missionValue.className = 'info-value';
@@ -1723,51 +1787,116 @@
             });
         }
         
+        // ตัวแปรเก็บค่าตัวกรองปัจจุบัน
+        let currentFilter = 'all';
+        let currentSearchText = '';
+        
         // ฟังก์ชันกรองข้อมูล
         function filterData(filter) {
+            currentFilter = filter;
+            applyFilters();
+        }
+        
+        // ฟังก์ชันค้นหา
+        function searchData(searchText) {
+            currentSearchText = searchText;
+            applyFilters();
+        }
+        
+        // ฟังก์ชันรวมสำหรับใช้ทั้งการกรองและการค้นหา
+        function applyFilters() {
             const rows = document.querySelectorAll('.dashboard-row');
             let availableCount = 0;
             let unavailableCount = 0;
             let totalVisible = 0;
             
+            // แยกคำค้นหาออกเป็นคำย่อยๆ เมื่อมีช่องว่าง
+            const searchTerms = currentSearchText.split(/\s+/).filter(term => term.length > 0);
+            
             rows.forEach(row => {
-                if (filter === 'all') {
+                let matchesFilter = false;
+                let matchesSearch = true;
+                let matchesType = false;
+                
+                // ตรวจสอบตัวกรองสถานะ
+                if (currentFilter === 'all') {
+                    matchesFilter = true;
+                } else if (currentFilter === 'available' && row.dataset.status === 'yes') {
+                    matchesFilter = true;
+                } else if (currentFilter === 'unavailable' && row.dataset.status === 'no') {
+                    matchesFilter = true;
+                } else if (currentFilter === 'aircraft' && row.dataset.type === 'aircraft') {
+                    matchesFilter = true;
+                } else if (currentFilter === 'helicopter' && row.dataset.type === 'helicopter') {
+                    matchesFilter = true;
+                }
+                
+                // ตรวจสอบการค้นหา
+                if (currentSearchText) {
+                    const name = row.querySelector('.aircraft-name').textContent.toLowerCase();
+                    const number = row.querySelector('.aircraft-number').textContent.toLowerCase();
+                    const infoValues = row.querySelectorAll('.info-value');
+                    let allText = name + ' ' + number + ' ';
+                    
+                    // รวมข้อความจากทุก info-value
+                    infoValues.forEach(info => {
+                        allText += info.textContent.toLowerCase() + ' ';
+                    });
+                    
+                    // ตรวจสอบแบบปกติ (ค้นหาทั้งประโยค)
+                    if (allText.includes(currentSearchText)) {
+                        matchesSearch = true;
+                    } else if (searchTerms.length > 1) {
+                        // ตรวจสอบแบบคำต่อคำ (ค้นหาแต่ละคำ)
+                        matchesSearch = searchTerms.every(term => allText.includes(term));
+                    } else {
+                        matchesSearch = false;
+                    }
+                }
+                
+                // แสดงหรือซ่อนตามผลการกรองและค้นหา
+                if (matchesFilter && matchesSearch) {
                     row.style.display = 'flex';
                     totalVisible++;
                     if (row.dataset.status === 'yes') availableCount++;
                     else unavailableCount++;
-                } else if (filter === 'available' && row.dataset.status === 'yes') {
-                    row.style.display = 'flex';
-                    availableCount++;
-                    totalVisible++;
-                } else if (filter === 'unavailable' && row.dataset.status === 'no') {
-                    row.style.display = 'flex';
-                    unavailableCount++;
-                    totalVisible++;
                 } else {
                     row.style.display = 'none';
                 }
             });
             
             // อัปเดตข้อมูลสรุป
-            document.getElementById('totalAircraft').textContent = totalVisible;
-            document.getElementById('availableAircraft').textContent = availableCount;
-            document.getElementById('unavailableAircraft').textContent = unavailableCount;
+            try {
+                const totalElement = document.getElementById('totalAircraft');
+                const availableElement = document.getElementById('availableAircraft');
+                const unavailableElement = document.getElementById('unavailableAircraft');
+                
+                if (totalElement) totalElement.textContent = totalVisible;
+                if (availableElement) availableElement.textContent = availableCount;
+                if (unavailableElement) unavailableElement.textContent = unavailableCount;
+            } catch (error) {
+                console.error('Error updating summary counts in applyFilters:', error);
+            }
         }
         
-        // ฟังก์ชันค้นหา
-        document.getElementById('searchBtn').addEventListener('click', function() {
-            const searchText = document.getElementById('searchInput').value.toLowerCase();
-            searchData(searchText);
-        });
+        // ตั้งค่าการค้นหาแบบ real-time
+        const searchInput = document.getElementById('searchInput');
         
-        // ค้นหาเมื่อกด Enter
-        document.getElementById('searchInput').addEventListener('keyup', function(event) {
-            if (event.key === 'Enter') {
+        if (searchInput) {
+            // ค้นหาทันทีเมื่อพิมพ์
+            searchInput.addEventListener('input', function() {
                 const searchText = this.value.toLowerCase();
                 searchData(searchText);
-            }
-        });
+            });
+            
+            // ค้นหาเมื่อกด Enter
+            searchInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    const searchText = this.value.toLowerCase();
+                    searchData(searchText);
+                }
+            });
+        }
         
         function searchData(searchText) {
             const rows = document.querySelectorAll('.dashboard-row');
@@ -1778,9 +1907,39 @@
             rows.forEach(row => {
                 const name = row.querySelector('.aircraft-name').textContent.toLowerCase();
                 const number = row.querySelector('.aircraft-number').textContent.toLowerCase();
-                const mission = row.querySelector('.info-value').textContent.toLowerCase();
+                // Fix: Get all info-value elements and check each one
+                const infoValues = row.querySelectorAll('.info-value');
+                let matchFound = false;
                 
-                if (name.includes(searchText) || number.includes(searchText) || mission.includes(searchText)) {
+                // ปรับปรุงคำค้นหาให้รองรับการค้นหาแบบยืดหยุ่น
+                const searchTerms = searchText.split(/\s+/).filter(term => term.length > 0);
+                
+                // Check if name or number matches
+                if (name.includes(searchText) || number.includes(searchText)) {
+                    matchFound = true;
+                } else {
+                    // Check if any info-value matches
+                    infoValues.forEach(infoValue => {
+                        const infoContent = infoValue.textContent.toLowerCase();
+                        
+                        // ตรวจสอบแบบปกติ (ค้นหาทั้งประโยค)
+                        if (infoContent.includes(searchText)) {
+                            matchFound = true;
+                            return;
+                        }
+                        
+                        // ตรวจสอบแบบคำต่อคำ (ค้นหาแต่ละคำ)
+                        if (searchTerms.length > 1) {
+                            const allTermsMatch = searchTerms.every(term => infoContent.includes(term));
+                            if (allTermsMatch) {
+                                matchFound = true;
+                                return;
+                            }
+                        }
+                    });
+                }
+                
+                if (matchFound) {
                     row.style.display = 'flex';
                     totalVisible++;
                     if (row.dataset.status === 'yes') availableCount++;
@@ -1790,24 +1949,35 @@
                 }
             });
             
-            // u0e2du0e31u0e1bu0e40u0e14u0e15u0e02u0e49u0e2du0e21u0e39u0e25u0e2au0e23u0e38u0e1b
-            document.getElementById('totalAircraft').textContent = totalVisible;
-            document.getElementById('availableAircraft').textContent = availableCount;
-            document.getElementById('unavailableAircraft').textContent = unavailableCount;
+            // อัปเดตข้อมูลสรุป
+            try {
+                const totalElement = document.getElementById('totalAircraft');
+                const availableElement = document.getElementById('availableAircraft');
+                const unavailableElement = document.getElementById('unavailableAircraft');
+                
+                if (totalElement) totalElement.textContent = totalVisible;
+                if (availableElement) availableElement.textContent = availableCount;
+                if (unavailableElement) unavailableElement.textContent = unavailableCount;
+            } catch (error) {
+                console.error('Error updating summary counts in searchData:', error);
+            }
         }
         
         // เพิ่มการตอบสนองต่อปุ่มกรอง
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // ลบคลาส active จากปุ่มทั้งหมด
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                // เพิ่มคลาส active ให้กับปุ่มที่ถูกคลิก
-                this.classList.add('active');
-                
-                const filter = this.dataset.filter;
-                filterData(filter);
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        if (filterButtons && filterButtons.length > 0) {
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // ลบคลาส active จากปุ่มทั้งหมด
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    // เพิ่มคลาส active ให้กับปุ่มที่ถูกคลิก
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    filterData(filter);
+                });
             });
-        });
+        }
     </script>
 </body>
 </html>
