@@ -1025,6 +1025,11 @@
 
         // ฟังก์ชันโหลดข้อมูลเครื่องบิน (ใช้ฟังก์ชันเดียวกับในไฟล์หลัก)
         async function fetchFlightData(selectedDate = null, silentMode = false, includeNextDay = true) {
+            // รีเซ็ตข้อมูลทั้งหมดก่อนโหลดข้อมูลใหม่
+            flightData = [];
+            window.nextDayData = [];
+            window.nextDayDate = null;
+            
             // รีเซ็ตสถานะการใช้ข้อมูลจากวันที่ใกล้เคียง
             isUsingNearbyDate = false;
             nearbyDateUsed = "";
@@ -1040,11 +1045,7 @@
                 console.log(`📅 กำลังโหลดข้อมูลสำหรับวันที่: ${selectedDate}`);
             }
             
-            // เก็บข้อมูลวันถัดไป
-            window.nextDayData = [];
-            window.nextDayDate = null;
-            
-            // คำนวณวันถัดไป
+            // คำนวณวันถัดไป - เปิดใช้งานเพื่อให้แสดงผลต่างของชั่วโมงบิน
             if (selectedDate && includeNextDay) {
                 const currentDate = new Date(selectedDate);
                 const nextDay = new Date(currentDate);
@@ -1057,6 +1058,14 @@
                 window.nextDayDate = `${year}-${month}-${day}`;
                 
                 console.log(`📅 จะโหลดข้อมูลของวันถัดไป (${window.nextDayDate}) ด้วย`);
+                
+                // ตรวจสอบว่าวันถัดไปเป็นวันในอนาคตหรือไม่
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (nextDay > today) {
+                    console.log(`⚠️ วันถัดไป (${window.nextDayDate}) เป็นวันในอนาคต อาจไม่มีข้อมูล`);
+                }
             }
 
             // กำหนดเวลาหมดอายุของข้อมูล (1 วัน)
@@ -1088,13 +1097,20 @@
             if (cachedData && cachedTimestamp && (currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRATION)) {
                 console.log(`📋 ใช้ข้อมูลจาก cache สำหรับ ${selectedDate || 'วันนี้'}...`);
                 
+                // รีเซ็ตข้อมูลก่อนโหลดจาก cache
+                flightData = [];
+                window.nextDayData = [];
+                
+                // โหลดข้อมูลจาก cache
                 flightData = JSON.parse(cachedData);
                 
                 // โหลดข้อมูลวันถัดไปจาก cache ถ้ามี
+                let hasNextDayData = false;
                 if (window.nextDayDate && nextDayCachedData && nextDayCachedTimestamp && 
                     (currentTime - parseInt(nextDayCachedTimestamp) < CACHE_EXPIRATION)) {
                     window.nextDayData = JSON.parse(nextDayCachedData);
                     console.log(`📋 ใช้ข้อมูลจาก cache สำหรับวันถัดไป ${window.nextDayDate}...`);
+                    hasNextDayData = window.nextDayData && window.nextDayData.length > 0;
                     
                     // ถ้าเป็นโหมดเงียบ ไม่ต้องอัปเดต UI
                     if (silentMode) {
@@ -1102,8 +1118,61 @@
                         return;
                     }
                     
-                    console.log("✅ โหลดข้อมูลจาก cache สำเร็จ:", flightData.length, "รายการ และข้อมูลวันถัดไป:", window.nextDayData.length, "รายการ");
-                    return;
+                    if (hasNextDayData) {
+                        console.log("✅ โหลดข้อมูลจาก cache สำเร็จ:", flightData.length, "รายการ และข้อมูลวันถัดไป:", window.nextDayData.length, "รายการ");
+                        return;
+                    }
+                }
+                
+                // ถ้าต้องการข้อมูลวันถัดไปแต่ไม่มีใน cache หรือมีแต่ว่าง ให้พยายามโหลดจาก server
+                if (includeNextDay && window.nextDayDate && !hasNextDayData) {
+                    console.log(`⚠️ ไม่พบข้อมูลวันถัดไป ${window.nextDayDate} ใน cache หรือข้อมูลว่าง จะพยายามโหลดจาก server`);
+                    
+                    try {
+                        console.log(`🔄 กำลังพยายามโหลดข้อมูลวันถัดไป ${window.nextDayDate} โดยตรง...`);
+                                // สร้าง URL สำหรับวันถัดไป
+                        let nextDayURL = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&gid=${aircraftSheetGID}&date=${window.nextDayDate}`;
+                        
+                        // โหลดข้อมูลวันถัดไป
+                        const nextDayResponse = await fetch(nextDayURL);
+                        const nextDayText = await nextDayResponse.text();
+                        const nextDayJson = JSON.parse(nextDayText.substring(47, nextDayText.length - 2));
+                        
+                        if (nextDayJson && nextDayJson.table && nextDayJson.table.rows && nextDayJson.table.rows.length > 0) {
+                            // วนลูปตรวจสอบทุกแถว
+                            for (let i = 0; i < nextDayJson.table.rows.length; i++) {
+                                const row = nextDayJson.table.rows[i];
+                                
+                                // ตรวจสอบว่ามีข้อมูลในคอลัมน์ A (วันที่) หรือไม่
+                                if (row.c && row.c[0] && row.c[0].v) {
+                                    // ดึงค่าวันที่จากคอลัมน์ A
+                                    let rowDate = formatDate(row.c[0].v);
+                                    
+                                    // ตรวจสอบว่าวันที่ตรงกับวันถัดไปหรือไม่
+                                    if (rowDate === window.nextDayDate) {
+                                        // ประมวลผลข้อมูลของวันถัดไป
+                                        window.nextDayData = [];
+                                        processRowData(row, window.nextDayData);
+                                        console.log(`✅ โหลดข้อมูลของวันถัดไป (${window.nextDayDate}) สำเร็จ: ${window.nextDayData.length} รายการ`);
+                                        
+                                        // บันทึกข้อมูลวันถัดไปลงใน cache
+                                        localStorage.setItem(nextDayCacheKey, JSON.stringify(window.nextDayData));
+                                        localStorage.setItem(nextDayTimestampKey, currentTime.toString());
+                                        hasNextDayData = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if (!hasNextDayData) {
+                                console.warn(`⚠️ ไม่พบข้อมูลสำหรับวันถัดไป ${window.nextDayDate} ในการโหลดโดยตรง`);
+                            }
+                        } else {
+                            console.warn(`⚠️ ไม่พบข้อมูลสำหรับวันถัดไป ${window.nextDayDate} ในการโหลดโดยตรง`);
+                        }
+                    } catch (error) {
+                        console.error(`❌ เกิดข้อผิดพลาดในการโหลดข้อมูลวันถัดไป ${window.nextDayDate}:`, error);
+                    }
                 }
                 
                 // ถ้าเป็นโหมดเงียบ (silent mode) ให้เก็บข้อมูลไว้ใน cache เท่านั้น ไม่ต้องอัปเดต UI
@@ -1113,7 +1182,12 @@
                 }
                 
                 console.log("✅ โหลดข้อมูลจาก cache สำเร็จ:", flightData.length, "รายการ");
+                if (hasNextDayData) {
+                    console.log("✅ และข้อมูลวันถัดไป:", window.nextDayData.length, "รายการ");
+                }
+                
                 return;
+                
             }
 
             try {
@@ -1122,7 +1196,9 @@
                 const text = await response.text();
                 const json = JSON.parse(text.substring(47, text.length - 2));
 
+                // รีเซ็ตข้อมูลอีกครั้งก่อนโหลดจาก server
                 flightData = [];
+                window.nextDayData = [];
 
                 // ตรวจสอบว่ามีข้อมูลหรือไม่
                 if (json && json.table && json.table.rows && json.table.rows.length > 0) {
@@ -1185,7 +1261,54 @@
                                     localStorage.setItem(nextDayCacheKey, JSON.stringify(window.nextDayData));
                                     localStorage.setItem(nextDayTimestampKey, currentTime.toString());
                                 } else {
-                                    console.warn(`⚠️ ไม่พบข้อมูลสำหรับวันถัดไป ${window.nextDayDate}`);
+                                    console.warn(`⚠️ ไม่พบข้อมูลสำหรับวันถัดไป ${window.nextDayDate} ในข้อมูลที่โหลดมา`);
+                                    
+                                    // พยายามโหลดข้อมูลวันถัดไปโดยตรง
+                                    try {
+                                        console.log(`🔄 กำลังพยายามโหลดข้อมูลวันถัดไป ${window.nextDayDate} โดยตรง...`);
+                                        
+                                        // สร้าง URL สำหรับวันถัดไป
+                                        let nextDayURL = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&gid=${aircraftSheetGID}&date=${window.nextDayDate}`;
+                                        
+                                        // โหลดข้อมูลวันถัดไป
+                                        const nextDayResponse = await fetch(nextDayURL);
+                                        const nextDayText = await nextDayResponse.text();
+                                        const nextDayJson = JSON.parse(nextDayText.substring(47, nextDayText.length - 2));
+                                        
+                                        if (nextDayJson && nextDayJson.table && nextDayJson.table.rows && nextDayJson.table.rows.length > 0) {
+                                            // วนลูปตรวจสอบทุกแถว
+                                            for (let i = 0; i < nextDayJson.table.rows.length; i++) {
+                                                const row = nextDayJson.table.rows[i];
+                                                
+                                                // ตรวจสอบว่ามีข้อมูลในคอลัมน์ A (วันที่) หรือไม่
+                                                if (row.c && row.c[0] && row.c[0].v) {
+                                                    // ดึงค่าวันที่จากคอลัมน์ A
+                                                    let rowDate = formatDate(row.c[0].v);
+                                                    
+                                                    // ตรวจสอบว่าวันที่ตรงกับวันถัดไปหรือไม่
+                                                    if (rowDate === window.nextDayDate) {
+                                                        // ประมวลผลข้อมูลของวันถัดไป
+                                                        window.nextDayData = [];
+                                                        processRowData(row, window.nextDayData);
+                                                        console.log(`✅ โหลดข้อมูลของวันถัดไป (${window.nextDayDate}) สำเร็จ: ${window.nextDayData.length} รายการ`);
+                                                        
+                                                        // บันทึกข้อมูลวันถัดไปลงใน cache
+                                                        localStorage.setItem(nextDayCacheKey, JSON.stringify(window.nextDayData));
+                                                        localStorage.setItem(nextDayTimestampKey, currentTime.toString());
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            
+                                            if (window.nextDayData.length === 0) {
+                                                console.warn(`⚠️ ไม่พบข้อมูลสำหรับวันถัดไป ${window.nextDayDate} ในการโหลดโดยตรง`);
+                                            }
+                                        } else {
+                                            console.warn(`⚠️ ไม่พบข้อมูลสำหรับวันถัดไป ${window.nextDayDate} ในการโหลดโดยตรง`);
+                                        }
+                                    } catch (error) {
+                                        console.error(`❌ เกิดข้อผิดพลาดในการโหลดข้อมูลวันถัดไป ${window.nextDayDate}:`, error);
+                                    }
                                 }
                             }
                         } else {
@@ -1358,7 +1481,11 @@
                     const remainingHours = type === "aircraft" ? (aircraft["ชั่วโมงเครื่องบิน"] || "") : (aircraft["ชั่วโมง"] || "");
                     const missionBase = aircraft["ภารกิจ/ฐานที่ตั้ง"] || "กรุงเทพฯ";
                     const status = aircraft["สภาพ"] ? (aircraft["สภาพ"].toString().toLowerCase() === "yes" ? "yes" : "no") : "no";
-                    // ไม่ต้องเก็บข้อมูลวันที่อีกต่อไป
+                    // เก็บข้อมูลวันที่เพื่อตรวจสอบ
+                    const dataDate = targetArray === window.nextDayData ? window.nextDayDate : (selectedDate || new Date().toISOString().split('T')[0]);
+                    
+                    // เก็บข้อมูลเพิ่มเติมเพื่อระบุว่าเป็นข้อมูลของวันถัดไปหรือไม่
+                    const isNextDayData = targetArray === window.nextDayData;
 
                     // สร้างข้อมูลสำหรับการแสดงผล
                     dataArray.push({
@@ -1367,7 +1494,9 @@
                         remainingHours: remainingHours || '-',
                         missionBase: missionBase || '-',
                         status: status || 'no',
-                        type: type || 'aircraft'
+                        type: type || 'aircraft',
+                        dataDate: dataDate, // เพิ่มข้อมูลวันที่เพื่อตรวจสอบ
+                        isNextDayData: isNextDayData // เพิ่มข้อมูลว่าเป็นข้อมูลของวันถัดไปหรือไม่
                     });
                 } catch (error) {
                     console.error(`❌ เกิดข้อผิดพลาดในการประมวลผลข้อมูล ${type}:`, error);
@@ -1426,12 +1555,29 @@
         
         // ฟังก์ชันสร้าง dashboard
         function renderDashboard() {
+            console.log("🔄 กำลังสร้าง dashboard ใหม่...");
+            
             const dashboardContainer = document.getElementById('dashboard');
             
             // Check if dashboard container exists
             if (!dashboardContainer) {
                 console.error('Dashboard container not found');
                 return;
+            }
+            
+            // ล้างข้อมูลเดิมก่อน
+            dashboardContainer.innerHTML = "";
+            
+            // ตรวจสอบว่ามีข้อมูลหรือไม่
+            if (!flightData || flightData.length === 0) {
+                dashboardContainer.innerHTML = "<div class='loading'>ไม่พบข้อมูลเครื่องบิน</div>";
+                console.log("⚠️ ไม่พบข้อมูลเครื่องบิน");
+                return;
+            }
+            
+            console.log(`📊 กำลังแสดงข้อมูลเครื่องบิน ${flightData.length} รายการ`);
+            if (window.nextDayData && window.nextDayData.length > 0) {
+                console.log(`📊 มีข้อมูลวันถัดไป ${window.nextDayData.length} รายการ`);
             }
             
             // อัปเดตข้อมูลสรุป
@@ -1456,15 +1602,6 @@
                     console.error('Error updating summary counts:', error);
                 }
             }
-            
-            // ตรวจสอบว่ามีข้อมูลหรือไม่
-            if (!flightData || flightData.length === 0) {
-                dashboardContainer.innerHTML = "<div class='loading'>ไม่พบข้อมูลเครื่องบิน</div>";
-                return;
-            }
-
-            // ล้างข้อมูลเดิม
-            dashboardContainer.innerHTML = "";
 
             // สร้างส่วนหัวของตาราง
             const headerRow = document.createElement('div');
@@ -1744,10 +1881,17 @@
                         // แสดงชั่วโมงบินของวันที่เลือกและผลต่าง
                         hoursValue.innerHTML = `${aircraft.remainingHours || '-'} ${diffDisplay}`;  // แสดงเฉพาะผลต่าง
                     } else {
+                        // ไม่พบข้อมูลเครื่องบินลำเดียวกันในวันถัดไป
                         hoursValue.textContent = aircraft.remainingHours || '-';
                     }
                 } else {
+                    // ไม่มีข้อมูลวันถัดไป
                     hoursValue.textContent = aircraft.remainingHours || '-';
+                    
+                    // ถ้ามีการพยายามโหลดข้อมูลวันถัดไปแต่ไม่พบ ให้แสดง log
+                    if (window.nextDayDate) {
+                        console.log(`ℹ️ แสดงเฉพาะชั่วโมงบินของวันที่เลือก (${aircraft.aircraftNumber}) เนื่องจากไม่พบข้อมูลวันถัดไป`);
+                    }
                 }
                 
                 hoursItem.appendChild(hoursLabel);
@@ -1759,7 +1903,7 @@
                 
                 const missionLabel = document.createElement('span');
                 missionLabel.className = 'info-label';
-                missionLabel.textContent = 'ภาระกิจ:';
+                missionLabel.textContent = 'ภารกิจ:';
                 
                 const missionValue = document.createElement('span');
                 missionValue.className = 'info-value';
