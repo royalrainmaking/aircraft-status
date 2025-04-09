@@ -9,7 +9,7 @@
         :root {
             --primary-color: #1a73e8;
             --secondary-color: #4285f4;
-            --background-color: #f5f5f5;
+            --background-color: #f0f4f8;
             --card-color: #ffffff;
             --text-color: #333333;
             --text-secondary: #666666;
@@ -17,6 +17,9 @@
             --success-color: #34c759;
             --warning-color: #ff9500;
             --danger-color: #ff3b30;
+            --highlight-color: #ffeb3b;
+            --gradient-start: #1a73e8;
+            --gradient-end: #4285f4;
         }
 
         * {
@@ -39,11 +42,11 @@
         }
 
         header {
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
             color: white;
             padding: 15px 0;
             margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
         }
 
         header .container {
@@ -60,11 +63,67 @@
         .date-selector {
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
             background-color: white;
             padding: 10px 15px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+        }
+        
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-left: auto;
+        }
+        
+        .filter-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .filter-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .filter-btn.active {
+            background-color: #0d47a1;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: white;
+        }
+        
+        .search-box input {
+            border: none;
+            padding: 6px 10px;
+            font-size: 0.9rem;
+            width: 150px;
+        }
+        
+        .search-box button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            cursor: pointer;
         }
 
         .date-selector label {
@@ -99,22 +158,103 @@
             border-collapse: collapse;
             margin-bottom: 20px;
             background-color: var(--card-color);
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             display: flex;
             flex-direction: column;
         }
+        
+        .dashboard-summary {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .summary-card {
+            flex: 1;
+            min-width: 180px;
+            background: linear-gradient(135deg, #f5f7fa, #e4e8f0);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .summary-card.available {
+            background: linear-gradient(135deg, #e6f7ee, #d0f0e0);
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .summary-card.unavailable {
+            background: linear-gradient(135deg, #ffeaea, #ffe0e0);
+            border-left: 4px solid var(--danger-color);
+        }
+        
+        .summary-card.total {
+            background: linear-gradient(135deg, #e8f0fe, #d4e4fd);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .summary-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        
+        .summary-icon {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            background-color: rgba(26, 115, 232, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .summary-card.available .summary-icon {
+            color: var(--success-color);
+            background-color: rgba(52, 199, 89, 0.1);
+        }
+        
+        .summary-card.unavailable .summary-icon {
+            color: var(--danger-color);
+            background-color: rgba(255, 59, 48, 0.1);
+        }
 
         .dashboard-header {
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
             color: white;
             font-weight: bold;
             text-align: left;
-            padding: 12px 15px;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .sort-controls {
@@ -156,9 +296,37 @@
         .dashboard-row {
             display: flex;
             align-items: center;
-            padding: 12px 15px;
+            padding: 10px 15px;
             border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s;
+            position: relative;
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+        
+        .dashboard-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: transparent;
             transition: background-color 0.3s;
+        }
+        
+        .dashboard-row[data-status='yes']::before {
+            background-color: var(--success-color);
+        }
+        
+        .dashboard-row[data-status='no']::before {
+            background-color: var(--danger-color);
+        }
+        
+        .dashboard-row:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1;
         }
 
         .dashboard-row:last-child {
@@ -174,72 +342,123 @@
         }
 
         .aircraft-image {
-            width: 80px;
-            height: 60px;
+            width: 50px;
+            height: 40px;
             object-fit: contain;
-            margin-right: 15px;
+            margin-right: 8px;
             border-radius: 4px;
             background-color: #f8f8f8;
-            padding: 5px;
+            padding: 2px;
             border: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
 
         .aircraft-info {
             flex: 1;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 10px;
+            overflow: hidden;
+            min-width: 0;
         }
 
+        .aircraft-name-container {
+            min-width: 150px;
+            max-width: 200px;
+            flex-shrink: 1;
+            overflow: hidden;
+        }
+        
         .aircraft-name {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
 
         .aircraft-number {
-            font-size: 1rem;
+            font-size: 0.8rem;
             color: var(--primary-color);
             font-weight: bold;
-            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
 
         .aircraft-details {
             display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
+            flex-wrap: nowrap;
+            gap: 5px;
+            align-items: center;
+            overflow: hidden;
+            flex: 1;
+            min-width: 0;
         }
 
         .info-item {
-            display: flex;
-            flex-direction: column;
-            min-width: 120px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background-color: rgba(0, 0, 0, 0.02);
+            padding: 3px 6px;
+            border-radius: 4px;
+            margin-right: 5px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .info-label {
             font-weight: bold;
             color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-bottom: 3px;
+            font-size: 0.7rem;
         }
 
         .info-value {
-            font-size: 1rem;
+            font-size: 0.85rem;
         }
 
         .hours-value {
-            font-size: 1.3rem;
+            font-size: 0.9rem;
             font-weight: bold;
             color: var(--primary-color);
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .hours-diff {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 12px;
+            margin-left: 5px;
+        }
+        
+        .hours-diff.positive {
+            color: white;
+            background-color: var(--success-color);
+        }
+        
+        .hours-diff.negative {
+            color: white;
+            background-color: var(--danger-color);
         }
 
         .status-indicator {
             display: inline-flex;
             align-items: center;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.85rem;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-size: 0.7rem;
             font-weight: 500;
-            margin-left: 10px;
+            margin-left: 5px;
+            flex-shrink: 0;
         }
 
         .status-available {
@@ -345,8 +564,36 @@
             <label for="dateSelector">เลือกวันที่:</label>
             <input type="date" id="dateSelector">
             <button id="resetDateBtn"><i class="fas fa-sync-alt"></i> รีเซ็ตเป็นวันนี้</button>
+            
+            <div class="filter-controls">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="ค้นหา...">
+                    <button id="searchBtn"><i class="fas fa-search"></i></button>
+                </div>
+                <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> ทั้งหมด</button>
+                <button class="filter-btn" data-filter="available"><i class="fas fa-check-circle"></i> พร้อมใช้งาน</button>
+                <button class="filter-btn" data-filter="unavailable"><i class="fas fa-times-circle"></i> ไม่พร้อมใช้งาน</button>
+            </div>
         </div>
 
+        <div id="dashboardSummary" class="dashboard-summary">
+            <div class="summary-card total">
+                <div class="summary-icon"><i class="fas fa-plane"></i></div>
+                <div class="summary-title">เครื่องบินทั้งหมด</div>
+                <div id="totalAircraft" class="summary-value">0</div>
+            </div>
+            <div class="summary-card available">
+                <div class="summary-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="summary-title">พร้อมใช้งาน</div>
+                <div id="availableAircraft" class="summary-value">0</div>
+            </div>
+            <div class="summary-card unavailable">
+                <div class="summary-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="summary-title">ไม่พร้อมใช้งาน</div>
+                <div id="unavailableAircraft" class="summary-value">0</div>
+            </div>
+        </div>
+        
         <div id="errorMessage" class="error-message" style="display: none;"></div>
 
         <div id="dashboard" class="dashboard">
@@ -357,6 +604,10 @@
     <script>
         // ตัวแปรเก็บข้อมูลเครื่องบิน
         let flightData = [];
+        
+        // ตัวแปรเก็บข้อมูลวันถัดไป
+        window.nextDayData = [];
+        window.nextDayDate = null;
         
         // ตัวแปรเก็บสถานะการใช้ข้อมูลจากวันที่ใกล้เคียง
         let isUsingNearbyDate = false;
@@ -764,7 +1015,7 @@
         }
 
         // ฟังก์ชันโหลดข้อมูลเครื่องบิน (ใช้ฟังก์ชันเดียวกับในไฟล์หลัก)
-        async function fetchFlightData(selectedDate = null, silentMode = false) {
+        async function fetchFlightData(selectedDate = null, silentMode = false, includeNextDay = true) {
             // รีเซ็ตสถานะการใช้ข้อมูลจากวันที่ใกล้เคียง
             isUsingNearbyDate = false;
             nearbyDateUsed = "";
@@ -779,6 +1030,25 @@
                 aircraftURL += `&date=${selectedDate}`;
                 console.log(`📅 กำลังโหลดข้อมูลสำหรับวันที่: ${selectedDate}`);
             }
+            
+            // เก็บข้อมูลวันถัดไป
+            window.nextDayData = [];
+            window.nextDayDate = null;
+            
+            // คำนวณวันถัดไป
+            if (selectedDate && includeNextDay) {
+                const currentDate = new Date(selectedDate);
+                const nextDay = new Date(currentDate);
+                nextDay.setDate(currentDate.getDate() + 1);
+                
+                // แปลงเป็นรูปแบบ YYYY-MM-DD
+                const year = nextDay.getFullYear();
+                const month = String(nextDay.getMonth() + 1).padStart(2, '0');
+                const day = String(nextDay.getDate()).padStart(2, '0');
+                window.nextDayDate = `${year}-${month}-${day}`;
+                
+                console.log(`📅 จะโหลดข้อมูลของวันถัดไป (${window.nextDayDate}) ด้วย`);
+            }
 
             // กำหนดเวลาหมดอายุของข้อมูล (1 วัน)
             const CACHE_EXPIRATION = 24 * 60 * 60 * 1000; // 1 วัน เป็นมิลลิวินาที
@@ -786,15 +1056,46 @@
             // สร้างคีย์ cache ที่รวมวันที่ที่เลือก
             const cacheKey = selectedDate ? `flightDataCache_${selectedDate}` : 'flightDataCache';
             const timestampKey = selectedDate ? `flightDataTimestamp_${selectedDate}` : 'flightDataTimestamp';
+            
+            // สร้างคีย์ cache สำหรับวันถัดไป
+            const nextDayCacheKey = window.nextDayDate ? `flightDataCache_${window.nextDayDate}` : null;
+            const nextDayTimestampKey = window.nextDayDate ? `flightDataTimestamp_${window.nextDayDate}` : null;
 
             // ตรวจสอบว่ามีข้อมูลใน localStorage หรือไม่
             const cachedData = localStorage.getItem(cacheKey);
             const cachedTimestamp = localStorage.getItem(timestampKey);
             const currentTime = new Date().getTime();
+            
+            // ตรวจสอบข้อมูล cache ของวันถัดไป
+            let nextDayCachedData = null;
+            let nextDayCachedTimestamp = null;
+            
+            if (window.nextDayDate) {
+                nextDayCachedData = localStorage.getItem(nextDayCacheKey);
+                nextDayCachedTimestamp = localStorage.getItem(nextDayTimestampKey);
+            }
 
             // ถ้ามีข้อมูลใน cache และยังไม่หมดอายุ ให้ใช้ข้อมูลจาก cache
             if (cachedData && cachedTimestamp && (currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRATION)) {
                 console.log(`📋 ใช้ข้อมูลจาก cache สำหรับ ${selectedDate || 'วันนี้'}...`);
+                
+                flightData = JSON.parse(cachedData);
+                
+                // โหลดข้อมูลวันถัดไปจาก cache ถ้ามี
+                if (window.nextDayDate && nextDayCachedData && nextDayCachedTimestamp && 
+                    (currentTime - parseInt(nextDayCachedTimestamp) < CACHE_EXPIRATION)) {
+                    window.nextDayData = JSON.parse(nextDayCachedData);
+                    console.log(`📋 ใช้ข้อมูลจาก cache สำหรับวันถัดไป ${window.nextDayDate}...`);
+                    
+                    // ถ้าเป็นโหมดเงียบ ไม่ต้องอัปเดต UI
+                    if (silentMode) {
+                        console.log(`🔕 โหมดเงียบ: ข้อมูลสำหรับวันที่ ${selectedDate || 'วันนี้'} และวันถัดไปมีอยู่ใน cache แล้ว`);
+                        return;
+                    }
+                    
+                    console.log("✅ โหลดข้อมูลจาก cache สำเร็จ:", flightData.length, "รายการ และข้อมูลวันถัดไป:", window.nextDayData.length, "รายการ");
+                    return;
+                }
                 
                 // ถ้าเป็นโหมดเงียบ (silent mode) ให้เก็บข้อมูลไว้ใน cache เท่านั้น ไม่ต้องอัปเดต UI
                 if (silentMode) {
@@ -802,7 +1103,6 @@
                     return;
                 }
                 
-                flightData = JSON.parse(cachedData);
                 console.log("✅ โหลดข้อมูลจาก cache สำเร็จ:", flightData.length, "รายการ");
                 return;
             }
@@ -865,6 +1165,37 @@
                         if (foundRow) {
                             // ประมวลผลข้อมูลแถวที่พบ
                             processRowData(foundRow);
+                            
+                            // ถ้าต้องการข้อมูลวันถัดไปด้วย
+                            if (window.nextDayDate && includeNextDay) {
+                                // ค้นหาข้อมูลของวันถัดไป
+                                let nextDayFoundRow = null;
+                                for (let i = 0; i < json.table.rows.length; i++) {
+                                    const row = json.table.rows[i];
+                                    if (row.c && row.c[0] && row.c[0].v) {
+                                        let rowDate = formatDate(row.c[0].v);
+                                        if (rowDate === window.nextDayDate) {
+                                            nextDayFoundRow = row;
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                if (nextDayFoundRow) {
+                                    // ประมวลผลข้อมูลของวันถัดไป
+                                    window.nextDayData = [];
+                                    processRowData(nextDayFoundRow, window.nextDayData);
+                                    console.log(`✅ โหลดข้อมูลของวันถัดไป (${window.nextDayDate}) สำเร็จ: ${window.nextDayData.length} รายการ`);
+                                    
+                                    // บันทึกข้อมูลวันถัดไปลงใน cache
+                                    const nextDayCacheKey = `flightDataCache_${window.nextDayDate}`;
+                                    const nextDayTimestampKey = `flightDataTimestamp_${window.nextDayDate}`;
+                                    localStorage.setItem(nextDayCacheKey, JSON.stringify(window.nextDayData));
+                                    localStorage.setItem(nextDayTimestampKey, currentTime.toString());
+                                } else {
+                                    console.warn(`⚠️ ไม่พบข้อมูลสำหรับวันถัดไป ${window.nextDayDate}`);
+                                }
+                            }
                         } else {
                             console.warn(`⚠️ ไม่พบข้อมูลสำหรับวันที่ ${selectedDate}`);
                             
@@ -946,7 +1277,9 @@
         }
 
         // ฟังก์ชันประมวลผลข้อมูลแถว
-        function processRowData(row) {
+        function processRowData(row, targetArray = null) {
+            // ถ้าไม่ได้ระบุ targetArray ให้ใช้ flightData
+            const dataArray = targetArray || flightData;
             try {
                 // ตรวจสอบว่ามีข้อมูลหรือไม่
                 if (!row.c) {
@@ -1017,7 +1350,7 @@
                     // ไม่ต้องเก็บข้อมูลวันที่อีกต่อไป
 
                     // สร้างข้อมูลสำหรับการแสดงผล
-                    flightData.push({
+                    dataArray.push({
                         name: name || '-',
                         aircraftNumber: aircraftNumber || '-',
                         remainingHours: remainingHours || '-',
@@ -1084,6 +1417,21 @@
         function renderDashboard() {
             const dashboardContainer = document.getElementById('dashboard');
             
+            // อัปเดตข้อมูลสรุป
+            let availableCount = 0;
+            let unavailableCount = 0;
+            
+            if (flightData && flightData.length > 0) {
+                flightData.forEach(aircraft => {
+                    if (aircraft.status === 'yes') availableCount++;
+                    else unavailableCount++;
+                });
+                
+                document.getElementById('totalAircraft').textContent = flightData.length;
+                document.getElementById('availableAircraft').textContent = availableCount;
+                document.getElementById('unavailableAircraft').textContent = unavailableCount;
+            }
+            
             // ตรวจสอบว่ามีข้อมูลหรือไม่
             if (!flightData || flightData.length === 0) {
                 dashboardContainer.innerHTML = "<div class='loading'>ไม่พบข้อมูลเครื่องบิน</div>";
@@ -1115,6 +1463,18 @@
                 headerTitle.appendChild(noticeSpan);
             } else {
                 headerTitle.textContent = `ข้อมูลชั่วโมงบินคงเหลือ (${flightData.length} รายการ)`;
+                
+                // เพิ่มข้อความแจ้งเตือนว่ากำลังแสดงข้อมูลวันถัดไปด้วย
+                if (window.nextDayData && window.nextDayData.length > 0) {
+                    const nextDayNotice = document.createElement('span');
+                    nextDayNotice.style.fontSize = '0.8em';
+                    nextDayNotice.style.color = '#0066cc';
+                    nextDayNotice.style.marginLeft = '10px';
+                    nextDayNotice.innerHTML = `<i class="fas fa-arrow-right"></i> แสดงชั่วโมงบินวันถัดไป (${window.nextDayDate})`;
+                    
+                    headerTitle.appendChild(document.createElement('br'));
+                    headerTitle.appendChild(nextDayNotice);
+                }
             }
             
             // สร้างปุ่มสำหรับเรียงลำดับ
@@ -1154,6 +1514,7 @@
             flightData.forEach((aircraft, index) => {
                 const row = document.createElement('div');
                 row.className = `dashboard-row ${index % 2 === 0 ? 'even' : ''}`;
+                row.dataset.status = aircraft.status; // เพิ่ม data attribute สำหรับการกรอง
 
                 // สร้างรูปภาพเครื่องบิน
                 const aircraftImage = document.createElement('img');
@@ -1203,17 +1564,16 @@
                 // สถานะเครื่องบิน
                 const statusIndicator = document.createElement('span');
                 statusIndicator.className = `status-indicator ${aircraft.status === 'yes' ? 'status-available' : 'status-unavailable'}`;
-                statusIndicator.textContent = aircraft.status === 'yes' ? '✓ พร้อมใช้งาน' : '✗ ไม่พร้อมใช้งาน';
+                statusIndicator.innerHTML = aircraft.status === 'yes' ? '<i class="fas fa-check-circle"></i> พร้อม' : '<i class="fas fa-times-circle"></i> ไม่พร้อม';
                 
                 // รวมชื่อ หมายเลข และสถานะ
-                const nameWrapper = document.createElement('div');
-                nameWrapper.style.display = 'flex';
-                nameWrapper.style.alignItems = 'center';
-                nameWrapper.appendChild(aircraftName);
-                nameWrapper.appendChild(statusIndicator);
+                const nameContainer = document.createElement('div');
+                nameContainer.className = 'aircraft-name-container';
+                nameContainer.appendChild(aircraftName);
+                nameContainer.appendChild(aircraftNumber);
                 
-                aircraftInfo.appendChild(nameWrapper);
-                aircraftInfo.appendChild(aircraftNumber);
+                aircraftInfo.appendChild(nameContainer);
+                aircraftInfo.appendChild(statusIndicator);
                 
                 // สร้างส่วนรายละเอียดเครื่องบิน
                 const aircraftDetails = document.createElement('div');
@@ -1223,20 +1583,108 @@
                 const infoRow = document.createElement('div');
                 infoRow.className = 'info-row';
                 infoRow.style.display = 'flex';
-                infoRow.style.gap = '20px';
-                infoRow.style.flexWrap = 'wrap';
+                infoRow.style.gap = '5px';
+                infoRow.style.flexWrap = 'nowrap';
+                infoRow.style.alignItems = 'center';
+                infoRow.style.overflow = 'hidden';
+                infoRow.style.flex = '1';
+                infoRow.style.minWidth = '0';
                 
                 // ชั่วโมงบินคงเหลือ
                 const hoursItem = document.createElement('div');
                 hoursItem.className = 'info-item';
+                hoursItem.style.backgroundColor = 'rgba(26, 115, 232, 0.08)';
+                hoursItem.style.fontWeight = 'bold';
                 
-                const hoursLabel = document.createElement('div');
+                const hoursLabel = document.createElement('span');
                 hoursLabel.className = 'info-label';
-                hoursLabel.textContent = 'ชั่วโมงบินคงเหลือ';
+                hoursLabel.textContent = 'ชม.';
                 
-                const hoursValue = document.createElement('div');
+                const hoursValue = document.createElement('span');
                 hoursValue.className = 'hours-value';
-                hoursValue.textContent = aircraft.remainingHours || '-';
+                
+                // ตรวจสอบว่ามีข้อมูลวันถัดไปหรือไม่
+                if (window.nextDayData && window.nextDayData.length > 0) {
+                    // หาข้อมูลเครื่องบินลำเดียวกันในวันถัดไป
+                    const nextDayAircraft = window.nextDayData.find(item => 
+                        item.aircraftNumber === aircraft.aircraftNumber && 
+                        item.name === aircraft.name);
+                    
+                    if (nextDayAircraft) {
+                        // คำนวณผลต่างของชั่วโมงบิน
+                        let hoursDiff = '';
+                        let diffDisplay = '';
+                        
+                        // ตรวจสอบว่ามีข้อมูลชั่วโมงบินทั้งสองวันหรือไม่
+                        if (aircraft.remainingHours && nextDayAircraft.remainingHours && 
+                            aircraft.remainingHours !== '-' && nextDayAircraft.remainingHours !== '-') {
+                            
+                            // ตรวจสอบว่าเป็นเครื่องบิน SKA-350 หรือไม่
+                            let isSKA = false;
+                            if (aircraft.name) {
+                                const nameStr = String(aircraft.name);
+                                if (nameStr.includes('SKA-350') || nameStr.includes('SKA350') || nameStr.includes('SKA')) {
+                                    isSKA = true;
+                                }
+                            }
+                            
+                            if (isSKA) {
+                                // สำหรับ SKA-350 ใช้การคำนวณแบบคณิตศาสตร์ธรรมดา
+                                try {
+                                    // แปลงข้อมูลเป็นตัวเลขทศนิยม
+                                    const current = parseFloat(aircraft.remainingHours.toString().replace(':', '.')) || 0;
+                                    const nextDay = parseFloat(nextDayAircraft.remainingHours.toString().replace(':', '.')) || 0;
+                                    
+                                    // คำนวณผลต่าง
+                                    const diff = nextDay - current;
+                                    
+                                    if (diff !== 0) {
+                                        // แสดงผลต่างในรูปแบบทศนิยม 1 ตำแหน่ง
+                                        const diffAbs = Math.abs(diff).toFixed(1);
+                                        const sign = diff > 0 ? '+' : '-';
+                                        const color = diff > 0 ? '#2ecc71' : '#e74c3c';
+                                        diffDisplay = `<span class="hours-diff ${diff > 0 ? 'positive' : 'negative'}">${sign}${diffAbs}</span>`;
+                                    }
+                                } catch (error) {
+                                    console.error('เกิดข้อผิดพลาดในการคำนวณสำหรับ SKA-350:', error);
+                                }
+                            } else {
+                                // สำหรับเครื่องบินทั่วไป ใช้การคำนวณแบบ HH:MM
+                                function timeToMinutes(timeStr) {
+                                    const parts = timeStr.split(':');
+                                    if (parts.length === 2) {
+                                        return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                                    }
+                                    return 0;
+                                }
+                                
+                                // แปลงนาทีเป็นรูปแบบ HH:MM
+                                function minutesToTime(minutes) {
+                                    const hours = Math.floor(Math.abs(minutes) / 60);
+                                    const mins = Math.abs(minutes) % 60;
+                                    return `${hours}:${mins.toString().padStart(2, '0')}`;
+                                }
+                                
+                                const currentMinutes = timeToMinutes(aircraft.remainingHours);
+                                const nextDayMinutes = timeToMinutes(nextDayAircraft.remainingHours);
+                                const diffMinutes = currentMinutes - nextDayMinutes;
+                                
+                                if (diffMinutes !== 0) {
+                                    hoursDiff = minutesToTime(diffMinutes);
+                                    const sign = diffMinutes > 0 ? '-' : '+';
+                                    diffDisplay = `<span class="hours-diff ${diffMinutes > 0 ? 'negative' : 'positive'}">${sign}${hoursDiff}</span>`;
+                                }
+                            }
+                        }
+                        
+                        // แสดงชั่วโมงบินของวันที่เลือกและผลต่าง
+                        hoursValue.innerHTML = `${aircraft.remainingHours || '-'} ${diffDisplay}`;  // แสดงเฉพาะผลต่าง
+                    } else {
+                        hoursValue.textContent = aircraft.remainingHours || '-';
+                    }
+                } else {
+                    hoursValue.textContent = aircraft.remainingHours || '-';
+                }
                 
                 hoursItem.appendChild(hoursLabel);
                 hoursItem.appendChild(hoursValue);
@@ -1245,11 +1693,11 @@
                 const missionItem = document.createElement('div');
                 missionItem.className = 'info-item';
                 
-                const missionLabel = document.createElement('div');
+                const missionLabel = document.createElement('span');
                 missionLabel.className = 'info-label';
-                missionLabel.textContent = 'ภารกิจ/ฐานที่ตั้ง';
+                missionLabel.textContent = 'ฐาน:';
                 
-                const missionValue = document.createElement('div');
+                const missionValue = document.createElement('span');
                 missionValue.className = 'info-value';
                 missionValue.textContent = aircraft.missionBase || '-';
                 
@@ -1274,6 +1722,92 @@
                 dashboardContainer.appendChild(row);
             });
         }
+        
+        // ฟังก์ชันกรองข้อมูล
+        function filterData(filter) {
+            const rows = document.querySelectorAll('.dashboard-row');
+            let availableCount = 0;
+            let unavailableCount = 0;
+            let totalVisible = 0;
+            
+            rows.forEach(row => {
+                if (filter === 'all') {
+                    row.style.display = 'flex';
+                    totalVisible++;
+                    if (row.dataset.status === 'yes') availableCount++;
+                    else unavailableCount++;
+                } else if (filter === 'available' && row.dataset.status === 'yes') {
+                    row.style.display = 'flex';
+                    availableCount++;
+                    totalVisible++;
+                } else if (filter === 'unavailable' && row.dataset.status === 'no') {
+                    row.style.display = 'flex';
+                    unavailableCount++;
+                    totalVisible++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // อัปเดตข้อมูลสรุป
+            document.getElementById('totalAircraft').textContent = totalVisible;
+            document.getElementById('availableAircraft').textContent = availableCount;
+            document.getElementById('unavailableAircraft').textContent = unavailableCount;
+        }
+        
+        // ฟังก์ชันค้นหา
+        document.getElementById('searchBtn').addEventListener('click', function() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            searchData(searchText);
+        });
+        
+        // ค้นหาเมื่อกด Enter
+        document.getElementById('searchInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                const searchText = this.value.toLowerCase();
+                searchData(searchText);
+            }
+        });
+        
+        function searchData(searchText) {
+            const rows = document.querySelectorAll('.dashboard-row');
+            let availableCount = 0;
+            let unavailableCount = 0;
+            let totalVisible = 0;
+            
+            rows.forEach(row => {
+                const name = row.querySelector('.aircraft-name').textContent.toLowerCase();
+                const number = row.querySelector('.aircraft-number').textContent.toLowerCase();
+                const mission = row.querySelector('.info-value').textContent.toLowerCase();
+                
+                if (name.includes(searchText) || number.includes(searchText) || mission.includes(searchText)) {
+                    row.style.display = 'flex';
+                    totalVisible++;
+                    if (row.dataset.status === 'yes') availableCount++;
+                    else unavailableCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // u0e2du0e31u0e1bu0e40u0e14u0e15u0e02u0e49u0e2du0e21u0e39u0e25u0e2au0e23u0e38u0e1b
+            document.getElementById('totalAircraft').textContent = totalVisible;
+            document.getElementById('availableAircraft').textContent = availableCount;
+            document.getElementById('unavailableAircraft').textContent = unavailableCount;
+        }
+        
+        // เพิ่มการตอบสนองต่อปุ่มกรอง
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // ลบคลาส active จากปุ่มทั้งหมด
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                // เพิ่มคลาส active ให้กับปุ่มที่ถูกคลิก
+                this.classList.add('active');
+                
+                const filter = this.dataset.filter;
+                filterData(filter);
+            });
+        });
     </script>
 </body>
 </html>
