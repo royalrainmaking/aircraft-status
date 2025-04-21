@@ -10,9 +10,12 @@ function formatSKATime(timeStr) {
     console.log("formatSKATime input:", timeStr);
     
     try {
+        // แปลงเป็นสตริงก่อนเพื่อให้แน่ใจว่าสามารถใช้ includes ได้
+        const timeString = String(timeStr);
+        
         // ถ้าเป็นรูปแบบ XX:XX
-        if (typeof timeStr === 'string' && timeStr.includes(':')) {
-            const parts = timeStr.split(':');
+        if (timeString.includes(':')) {
+            const parts = timeString.split(':');
             if (parts.length === 2) {
                 const hours = parseInt(parts[0], 10);
                 const minutes = parseInt(parts[1], 10);
@@ -22,26 +25,27 @@ function formatSKATime(timeStr) {
                     const decimal = minutes / 60;
                     // ปัดทศนิยมให้เหลือ 1 ตำแหน่ง
                     const result = (hours + decimal).toFixed(1);
-                    console.log(`Converted ${timeStr} to ${result}`);
+                    console.log(`Converted ${timeString} to ${result}`);
                     return result;
                 }
             }
-        } else if (typeof timeStr === 'string' && timeStr.includes('.')) {
+        } else if (timeString.includes('.')) {
             // ถ้าเป็นรูปแบบ XX.XX อยู่แล้ว ให้ปัดทศนิยมให้เหลือ 1 ตำแหน่ง
-            const numValue = parseFloat(timeStr);
+            const numValue = parseFloat(timeString);
             if (!isNaN(numValue)) {
                 return numValue.toFixed(1);
             }
-        } else if (!isNaN(parseFloat(timeStr))) {
+        } else if (!isNaN(parseFloat(timeString))) {
             // ถ้าเป็นตัวเลข ให้ปัดทศนิยมให้เหลือ 1 ตำแหน่ง
-            return parseFloat(timeStr).toFixed(1);
+            return parseFloat(timeString).toFixed(1);
         }
         
         // ถ้าไม่ใช่รูปแบบที่รองรับ ให้คืนค่าเดิม
-        return timeStr;
+        return timeString;
     } catch (error) {
-        console.error("เกิดข้อผิดพลาดในการแปลงเวลา SKA:", error);
-        return timeStr;
+        console.error("เกิดข้อผิดพลาดในการแปลงเวลา SKA:", error, "input:", timeStr);
+        // ในกรณีที่เกิดข้อผิดพลาด ให้คืนค่า "0" เพื่อป้องกันการแสดงผลที่ไม่ถูกต้อง
+        return "0";
     }
 }
 
@@ -51,11 +55,14 @@ function formatFlightHours(hours, isSKA = false) {
 
     try {
         console.log("formatFlightHours input:", hours, typeof hours, isSKA ? "(SKA)" : "");
+        
+        // แปลงเป็นสตริงก่อนเพื่อให้แน่ใจว่าสามารถใช้ includes ได้
+        const hoursString = String(hours);
 
         // ถ้าเป็นสตริงที่มีรูปแบบ "HH:MM" อยู่แล้ว
-        if (typeof hours === 'string' && hours.includes(':')) {
+        if (hoursString.includes(':')) {
             // ตรวจสอบว่ารูปแบบถูกต้องหรือไม่
-            const parts = hours.split(':');
+            const parts = hoursString.split(':');
             if (parts.length === 2) {
                 const h = parseInt(parts[0], 10);
                 const m = parseInt(parts[1], 10);
@@ -63,13 +70,13 @@ function formatFlightHours(hours, isSKA = false) {
                 if (!isNaN(h) && !isNaN(m)) {
                     // ถ้ารูปแบบถูกต้อง แต่ต้องตรวจสอบว่านาทีอยู่ในช่วง 0-59
                     if (m >= 0 && m < 60) {
-                        console.log("Returning original HH:MM format:", hours);
+                        console.log("Returning original HH:MM format:", hoursString);
                         return `${h}:${m.toString().padStart(2, '0')}`;
                     } else {
                         // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
                         const extraHours = Math.floor(m / 60);
                         const adjustedMinutes = m % 60;
-                        console.log(`Adjusted ${hours} to ${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`);
+                        console.log(`Adjusted ${hoursString} to ${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`);
                         return `${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
                     }
                 }
@@ -77,57 +84,84 @@ function formatFlightHours(hours, isSKA = false) {
         }
 
         // ถ้าเป็นสตริงที่มีรูปแบบ "HH.MM" (ทศนิยม)
-        if (typeof hours === 'string' && hours.includes('.')) {
-            const parts = hours.split('.');
+        if (hoursString.includes('.')) {
+            const parts = hoursString.split('.');
             if (parts.length === 2) {
                 const h = parseInt(parts[0], 10);
+                
+                // ตรวจสอบว่า h เป็นตัวเลขที่ถูกต้อง
+                if (isNaN(h)) {
+                    console.log(`Invalid hour part in ${hoursString}`);
+                    return "0:00";
+                }
                 
                 // สำหรับเครื่องบิน SKA ทศนิยม .5 หมายถึง 30 นาที (ครึ่งชั่วโมง)
                 if (isSKA) {
                     // แปลงทศนิยมเป็นนาที (.5 = 30 นาที)
                     // เต็ม 10 (1.0) เท่ากับ 60 นาที
-                    const decimalPart = parseFloat(`0.${parts[1]}`);
+                    let decimalPart;
+                    try {
+                        decimalPart = parseFloat(`0.${parts[1]}`);
+                        if (isNaN(decimalPart)) {
+                            console.log(`Invalid decimal part in ${hoursString}`);
+                            decimalPart = 0;
+                        }
+                    } catch (e) {
+                        console.error(`Error parsing decimal part in ${hoursString}:`, e);
+                        decimalPart = 0;
+                    }
+                    
                     const m = Math.round(decimalPart * 60);
                     
-                    if (!isNaN(h) && !isNaN(m)) {
-                        // ตรวจสอบว่านาทีอยู่ในช่วง 0-59
-                        if (m >= 0 && m < 60) {
-                            console.log(`Converted SKA ${hours} to ${h}:${m.toString().padStart(2, '0')}`);
-                            return `${h}:${m.toString().padStart(2, '0')}`;
-                        } else {
-                            // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
-                            const extraHours = Math.floor(m / 60);
-                            const adjustedMinutes = m % 60;
-                            console.log(`Adjusted SKA ${hours} to ${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`);
-                            return `${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
-                        }
+                    // ตรวจสอบว่านาทีอยู่ในช่วง 0-59
+                    if (m >= 0 && m < 60) {
+                        console.log(`Converted SKA ${hoursString} to ${h}:${m.toString().padStart(2, '0')}`);
+                        return `${h}:${m.toString().padStart(2, '0')}`;
+                    } else {
+                        // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
+                        const extraHours = Math.floor(m / 60);
+                        const adjustedMinutes = m % 60;
+                        console.log(`Adjusted SKA ${hoursString} to ${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`);
+                        return `${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
                     }
                 } else {
                     // สำหรับเครื่องบินทั่วไป ทศนิยมเป็นเศษส่วนของชั่วโมง (เช่น .4 = 24 นาที)
-                    const decimalPart = parseFloat(`0.${parts[1]}`);
+                    let decimalPart;
+                    try {
+                        decimalPart = parseFloat(`0.${parts[1]}`);
+                        if (isNaN(decimalPart)) {
+                            console.log(`Invalid decimal part in ${hoursString}`);
+                            decimalPart = 0;
+                        }
+                    } catch (e) {
+                        console.error(`Error parsing decimal part in ${hoursString}:`, e);
+                        decimalPart = 0;
+                    }
+                    
                     // ใช้ Math.trunc เพื่อตัดเศษทิ้งทั้งหมด
                     const m = Math.trunc(decimalPart * 60);
 
-                    if (!isNaN(h) && !isNaN(m)) {
-                        // ตรวจสอบว่านาทีอยู่ในช่วง 0-59
-                        if (m >= 0 && m < 60) {
-                            console.log(`Converted ${hours} to ${h}:${m.toString().padStart(2, '0')}`);
-                            return `${h}:${m.toString().padStart(2, '0')}`;
-                        } else {
-                            // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
-                            const extraHours = Math.floor(m / 60);
-                            const adjustedMinutes = m % 60;
-                            console.log(`Adjusted ${hours} to ${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`);
-                            return `${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
-                        }
+                    // ตรวจสอบว่านาทีอยู่ในช่วง 0-59
+                    if (m >= 0 && m < 60) {
+                        console.log(`Converted ${hoursString} to ${h}:${m.toString().padStart(2, '0')}`);
+                        return `${h}:${m.toString().padStart(2, '0')}`;
+                    } else {
+                        // ถ้านาทีไม่ถูกต้อง ให้ปรับค่า
+                        const extraHours = Math.floor(m / 60);
+                        const adjustedMinutes = m % 60;
+                        console.log(`Adjusted ${hoursString} to ${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`);
+                        return `${h + extraHours}:${adjustedMinutes.toString().padStart(2, '0')}`;
                     }
                 }
             }
         }
 
         // แปลงเป็นตัวเลข
-        const numHours = parseFloat(hours);
-        if (isNaN(numHours)) return "0:00";
+        const numHours = parseFloat(hoursString);
+        if (isNaN(numHours)) {
+            console.log(`Cannot parse ${hoursString} as a number`);
+            return "0:00";
+        }
 
         // สำหรับเครื่องบิน SKA ทศนิยม .5 หมายถึง 30 นาที (ครึ่งชั่วโมง)
         if (isSKA) {
@@ -171,7 +205,7 @@ function formatFlightHours(hours, isSKA = false) {
             }
         }
     } catch (error) {
-        console.error("เกิดข้อผิดพลาดในการจัดรูปแบบเวลา:", error);
+        console.error("เกิดข้อผิดพลาดในการจัดรูปแบบเวลา:", error, "input:", hours);
         return "0:00";
     }
 }
@@ -215,10 +249,15 @@ async function HgetValidACheck(aircraftNumber) {
     }
 
     try {
+        // แปลงเป็นสตริงเพื่อให้แน่ใจว่าสามารถใช้ toString ได้
+        const aircraftNumberStr = String(aircraftNumber).trim();
+        
         const sheetID = "1_M74Pe_4uul0fkcEea8AMxQIMcPznNZ9ttCqvbeQgBs";  // ID ของชีต
         const helicopterSheetGID = "1621250589";  // GID ของแผ่นที่ต้องการดึงข้อมูล
         const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&gid=${helicopterSheetGID}`;
 
+        console.log(`กำลังดึงข้อมูลสำหรับเครื่องบินหมายเลข ${aircraftNumberStr} จาก Google Sheets...`);
+        
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -234,6 +273,12 @@ async function HgetValidACheck(aircraftNumber) {
 
         // แปลงข้อมูลเป็น JSON
         try {
+            // ตรวจสอบว่า text มีความยาวเพียงพอก่อนที่จะตัดสตริง
+            if (text.length <= 47) {
+                console.warn("ข้อมูลที่ได้รับจาก Google Sheets มีความยาวไม่เพียงพอ");
+                return 150; // ค่าเริ่มต้น
+            }
+            
             const json = JSON.parse(text.substring(47, text.length - 2));
 
             // ตรวจสอบว่า JSON มีโครงสร้างที่ถูกต้องหรือไม่
@@ -242,6 +287,8 @@ async function HgetValidACheck(aircraftNumber) {
                 return 150; // ค่าเริ่มต้น
             }
 
+            console.log(`ได้รับข้อมูลจาก Google Sheets จำนวน ${json.table.rows.length} แถว`);
+            
             // ลูปค้นหาข้อมูลที่ตรงกับหมายเลขเครื่องบิน
             for (let row of json.table.rows) {
                 if (!row.c || !Array.isArray(row.c) || row.c.length < 10) {
@@ -253,7 +300,10 @@ async function HgetValidACheck(aircraftNumber) {
                 if (!aircraft) continue; // ข้ามแถวที่ไม่มีหมายเลขเครื่องบิน
 
                 // เปรียบเทียบหมายเลขเครื่องบิน
-                if (aircraft.toString().trim() === aircraftNumber.toString().trim()) {
+                const rowAircraftStr = String(aircraft).trim();
+                if (rowAircraftStr === aircraftNumberStr) {
+                    console.log(`พบข้อมูลสำหรับเครื่องบินหมายเลข ${aircraftNumberStr}`);
+                    
                     // ค้นหาคอลัมน์ H, I, J เพื่อนำ maxHours มาใช้
                     for (let col = 7; col <= 9; col++) {
                         let value = row.c[col]?.v;
@@ -264,12 +314,13 @@ async function HgetValidACheck(aircraftNumber) {
                     }
 
                     // ถ้าไม่พบค่าในคอลัมน์ H, I, J ให้คืนค่าเริ่มต้น
+                    console.log(`ไม่พบค่า maxHours ในคอลัมน์ H, I, J สำหรับเครื่องบินหมายเลข ${aircraftNumberStr}`);
                     return 150;
                 }
             }
 
             // ถ้าไม่พบข้อมูลที่ตรงกับหมายเลขเครื่องบิน
-            console.log(`ไม่พบข้อมูลสำหรับเครื่องบินหมายเลข ${aircraftNumber}`);
+            console.log(`ไม่พบข้อมูลสำหรับเครื่องบินหมายเลข ${aircraftNumberStr}`);
             return 150;
         } catch (jsonError) {
             console.error("เกิดข้อผิดพลาดในการแปลงข้อมูลเป็น JSON:", jsonError);
