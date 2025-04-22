@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ชั่วโมงบินคงเหลือ - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #4285f4;
+            --background-color: #f0f4f8;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --success-color: #34c759;
+            --warning-color: #ff9500;
+            --danger-color: #ff3b30;
+            --highlight-color: #ffeb3b;
+            --gradient-start: #1a73e8;
+            --gradient-end: #4285f4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .date-selector {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            background-color: white;
+            padding: 6px 8px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+        }
+        
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-left: auto;
+        }
+        
+        .filter-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            transition: background-color 0.3s;
+            height: 24px;
+        }
+        
+        .filter-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .filter-btn.active {
+            background-color: #0d47a1;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+            background-color: white;
+            height: 24px;
+        }
+        
+        .search-box input {
+            border: none;
+            padding: 2px 5px;
+            font-size: 0.75rem;
+            width: 100px;
+        }
+        
+        .search-box button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 2px 5px;
+            cursor: pointer;
+            height: 100%;
+            font-size: 0.75rem;
+        }
+
+        .date-selector label {
+            margin-right: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .date-selector input[type="date"] {
+            padding: 2px 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            font-size: 0.8rem;
+            height: 24px;
+        }
+
+        .date-selector button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            height: 24px;
+            font-size: 0.8rem;
+        }
+
+        .date-selector button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .dashboard {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: var(--card-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .dashboard-summary {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--card-color);
+            border-radius: 6px;
+            padding: 6px 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .summary-card {
+            flex: 1;
+            min-width: 120px;
+            background: linear-gradient(135deg, #f5f7fa, #e4e8f0);
+            border-radius: 4px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .summary-card.available {
+            background: linear-gradient(135deg, #e6f7ee, #d0f0e0);
+            border-left: 2px solid var(--success-color);
+        }
+        
+        .summary-card.unavailable {
+            background: linear-gradient(135deg, #ffeaea, #ffe0e0);
+            border-left: 2px solid var(--danger-color);
+        }
+        
+        .summary-card.total {
+            background: linear-gradient(135deg, #e8f0fe, #d4e4fd);
+            border-left: 2px solid var(--primary-color);
+        }
+        
+        .summary-title {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+        
+        .summary-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        
+        .summary-icon {
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+            color: var(--primary-color);
+            background-color: rgba(26, 115, 232, 0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .summary-card.available .summary-icon {
+            color: var(--success-color);
+            background-color: rgba(52, 199, 89, 0.1);
+        }
+        
+        .summary-card.unavailable .summary-icon {
+            color: var(--danger-color);
+            background-color: rgba(255, 59, 48, 0.1);
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            font-weight: bold;
+            text-align: left;
+            padding: 6px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+        }
+        
+        .sort-controls {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .sort-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 2px 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 22px;
+        }
+        
+        .sort-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .sort-btn.active {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .closest-date-notice {
+            font-size: 0.7rem;
+            color: #f8d7da;
+            background-color: rgba(220, 53, 69, 0.2);
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-top: 3px;
+            display: inline-block;
+        }
+
+        .dashboard-row {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.2s;
+            position: relative;
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+        
+        .dashboard-row[data-status='yes'] {
+            background: linear-gradient(to right, rgba(52, 199, 89, 0.2), rgba(52, 199, 89, 0.05));
+        }
+        
+        .dashboard-row[data-status='no'] {
+            background: linear-gradient(to right, rgba(255, 59, 48, 0.2), rgba(255, 59, 48, 0.05));
+        }
+        
+        .dashboard-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: transparent;
+            transition: background-color 0.2s;
+        }
+        
+        .dashboard-row[data-status='yes']::before {
+            background-color: var(--success-color);
+        }
+        
+        .dashboard-row[data-status='no']::before {
+            background-color: var(--danger-color);
+        }
+        
+        .dashboard-row:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            z-index: 1;
+        }
+
+        .dashboard-row:last-child {
+            border-bottom: none;
+        }
+
+        .dashboard-row:hover {
+            background-color: var(--background-color);
+        }
+
+        .dashboard-row.even:not([data-status='yes']):not([data-status='no']) {
+            background-color: rgba(0, 0, 0, 0.01);
+        }
+
+        .aircraft-image {
+            width: 50px;
+            height: 40px;
+            object-fit: contain;
+            margin-right: 8px;
+            border-radius: 4px;
+            background-color: #f8f8f8;
+            padding: 2px;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .aircraft-info {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 6px;
+            overflow: hidden;
+            min-width: 0;
+            margin-right: 8px;
+        }
+
+        .aircraft-name-container {
+            min-width: 100px;
+            max-width: 120px;
+            flex-shrink: 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .aircraft-name {
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .aircraft-number {
+            font-size: 0.7rem;
+            color: var(--primary-color);
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .aircraft-details {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 4px;
+            align-items: center;
+            overflow: hidden;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .info-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            background-color: rgba(0, 0, 0, 0.02);
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin-right: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .hours-item {
+            min-width: 140px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(26, 115, 232, 0.1), rgba(66, 133, 244, 0.2));
+            font-weight: bold;
+            justify-content: center;
+            border-radius: 4px;
+            border-left: 3px solid var(--primary-color);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mission-item {
+            min-width: 100px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));
+            border-radius: 4px;
+            border-left: 3px solid #666;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .info-label {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            margin-right: 2px;
+        }
+
+        .info-value {
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .hours-diff {
+            font-size: 0.7rem;
+            padding: 1px 3px;
+            border-radius: 3px;
+            margin-left: 4px;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1.2;
+        }
+
+        .hours-diff.positive {
+            background-color: rgba(52, 199, 89, 0.2);
+            color: var(--success-color);
+        }
+
+        .hours-diff.negative {
+            background-color: rgba(255, 59, 48, 0.2);
+            color: var(--danger-color);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            margin-left: 4px;
+            white-space: nowrap;
+        }
+
+        .status-available {
+            background-color: rgba(52, 199, 89, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-unavailable {
+            background-color: rgba(255, 59, 48, 0.2);
+            color: var(--danger-color);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(26, 115, 232, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        /* โหมดมือถือ */
+        @media (max-width: 767px) {
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+                margin-bottom: 6px;
+            }
+
+            .dashboard-row {
+                display: flex;
+                align-items: center;
+                padding: 5px;
+                margin-bottom: 3px;
+                border-radius: 4px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+                min-height: 24px;
+                position: relative;
+                background-color: white;
+            }
+
+            .aircraft-details {
+                display: none; /* ซ่อนรายละเอียดในโหมดมือถือ */
+            }
+
+            .aircraft-info {
+                display: contents;
+            }
+
+            .aircraft-name {
+                font-size: 0.35rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                margin-bottom: 0;
+                font-weight: normal;
+                display: none; /* ซ่อนชื่อเครื่องบินในโหมดมือถือ */
+            }
+
+            .aircraft-number {
+                font-size: 0.6rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                color: var(--primary-color);
+                background-color: rgba(26, 115, 232, 0.2);
+                padding: 3px 5px;
+                border-radius: 3px;
+                font-weight: bold;
+                border: 1px solid rgba(26, 115, 232, 0.3);
+                width: 45px;
+                text-align: center;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                margin-right: 5px;
+                flex-shrink: 0;
+            }
+
+            .hours-value {
+                display: none; /* ซ่อนชั่วโมงบินในโหมดมือถือ */
+            }
+
+            .hours-diff {
+                font-size: 0.55rem;
+                padding: 3px 5px;
+                border-radius: 3px;
+                font-weight: bold;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                width: 40px;
+                flex-shrink: 0;
+            }
+
+            .aircraft-image {
+                display: none; /* ซ่อนรูปภาพในโหมดมือถือ */
+            }
+
+            /* ปรับขนาดของ info-item ในโหมดมือถือ */
+            .info-item {
+                font-size: 0.25rem;
+                padding: 0px 1px;
+                margin-bottom: 1px;
+                margin-right: 1px;
+                max-width: 35px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                margin-left: 60px; /* ให้ห่างจากหมายเลขเครื่องบิน */
+            }
+
+            .hours-item {
+                min-width: 35px;
+                padding: 0px 1px;
+                font-size: 0.45rem;
+            }
+
+            /* ปรับขนาดของ mission-item ในโหมดมือถือขนาดเล็ก */
+            .mission-item {
+                font-size: 0.55rem;
+                padding: 3px 5px;
+                flex-grow: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                position: relative;
+                text-align: left;
+                background: linear-gradient(135deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));
+                border-radius: 3px;
+                border-left: 3px solid #666;
+                margin-right: 5px;
+                white-space: nowrap;
+            }
+
+            .date-selector {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 4px 6px;
+            }
+
+            .date-selector input[type="date"] {
+                width: 100%;
+                margin-bottom: 4px;
+            }
+
+            .filter-controls {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 4px;
+            }
+
+            .filter-btn {
+                padding: 2px 4px;
+                font-size: 0.65rem;
+                height: 20px;
+            }
+
+            .search-box {
+                height: 20px;
+            }
+
+            .search-box input {
+                width: 80px;
+                font-size: 0.65rem;
+            }
+
+            .dashboard-header {
+                padding: 4px 6px;
+                font-size: 0.7rem;
+            }
+
+            .sort-btn {
+                padding: 1px 3px;
+                font-size: 0.6rem;
+                height: 18px;
+            }
+
+            .dashboard-summary {
+                padding: 4px;
+                gap: 4px;
+            }
+
+            .summary-card {
+                min-width: 80px;
+                padding: 3px;
+            }
+
+            .summary-title {
+                font-size: 0.6rem;
+            }
+
+            .summary-value {
+                font-size: 0.9rem;
+            }
+
+            .summary-icon {
+                font-size: 0.7rem;
+                width: 20px;
+                height: 20px;
+                margin-bottom: 2px;
+            }
+        }
+
+        /* โหมดมือถือขนาดเล็ก */
+        @media (max-width: 480px) {
+            .container {
+                padding: 5px;
+            }
+
+            h1 {
+                font-size: 1.1rem;
+            }
+
+            /* ปรับขนาดของ info-item ในโหมดมือถือขนาดเล็กมาก */
+            .info-item {
+                font-size: 0.18rem;
+                padding: 0px 1px;
+                margin-right: 1px;
+                margin-bottom: 1px;
+                max-width: 25px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                margin-left: 60px; /* ให้ห่างจากหมายเลขเครื่องบิน */
+            }
+
+            .hours-item {
+                min-width: 20px;
+                padding: 0px 1px;
+                font-size: 0.3rem;
+            }
+
+            /* ปรับขนาดของ mission-item ในโหมดมือถือขนาดเล็กมาก */
+            .mission-item {
+                font-size: 0.5rem;
+                padding: 3px 5px;
+                flex-grow: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                position: relative;
+                text-align: left;
+                background: linear-gradient(135deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));
+                border-radius: 3px;
+                border-left: 3px solid #666;
+                margin-right: 5px;
+                white-space: nowrap;
+            }
+
+            .dashboard-header {
+                padding: 3px 4px;
+                font-size: 0.6rem;
+            }
+
+            .sort-btn {
+                padding: 0px 2px;
+                font-size: 0.5rem;
+                height: 16px;
+            }
+
+            .filter-btn {
+                padding: 1px 3px;
+                font-size: 0.6rem;
+                height: 18px;
+            }
+
+            .info-value {
+                font-size: 0.7rem;
+            }
+
+            .hours-diff {
+                font-size: 0.5rem;
+                padding: 3px 5px;
+                min-width: 40px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>ชั่วโมงบินคงเหลือ</h1>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="date-selector">
+            <div>
+                <label for="date">วันที่:</label>
+                <input type="date" id="date" name="date">
+                <button id="load-data">โหลดข้อมูล</button>
+            </div>
+            
+            <div class="filter-controls">
+                <button class="filter-btn active" data-filter="all">
+                    <i class="fas fa-list"></i> ทั้งหมด
+                </button>
+                <button class="filter-btn" data-filter="yes">
+                    <i class="fas fa-check-circle"></i> พร้อมใช้งาน
+                </button>
+                <button class="filter-btn" data-filter="no">
+                    <i class="fas fa-times-circle"></i> ไม่พร้อมใช้งาน
+                </button>
+                <div class="search-box">
+                    <input type="text" id="search" placeholder="ค้นหา...">
+                    <button id="search-btn"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-summary">
+            <div class="summary-card total">
+                <div class="summary-icon"><i class="fas fa-plane"></i></div>
+                <div class="summary-title">เครื่องบินทั้งหมด</div>
+                <div class="summary-value" id="total-count">0</div>
+            </div>
+            <div class="summary-card available">
+                <div class="summary-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="summary-title">พร้อมใช้งาน</div>
+                <div class="summary-value" id="available-count">0</div>
+            </div>
+            <div class="summary-card unavailable">
+                <div class="summary-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="summary-title">ไม่พร้อมใช้งาน</div>
+                <div class="summary-value" id="unavailable-count">0</div>
+            </div>
+        </div>
+        
+        <div class="dashboard">
+            <div class="dashboard-header">
+                <div>รายการเครื่องบิน</div>
+                <div class="sort-controls">
+                    <button class="sort-btn active" data-sort="name">
+                        <i class="fas fa-sort-alpha-down"></i> ชื่อ
+                    </button>
+                    <button class="sort-btn" data-sort="hours">
+                        <i class="fas fa-sort-numeric-down"></i> ชั่วโมงบิน
+                    </button>
+                    <button class="sort-btn" data-sort="status">
+                        <i class="fas fa-sort"></i> สถานะ
+                    </button>
+                </div>
+            </div>
+            <div id="aircraft-list">
+                <!-- ข้อมูลเครื่องบินจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">กำลังโหลดข้อมูล...</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ตั้งค่าวันที่เริ่มต้นเป็นวันปัจจุบัน
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('date').value = formattedDate;
+            
+            // โหลดข้อมูลเมื่อเริ่มต้น
+            loadData();
+            
+            // เพิ่ม event listener สำหรับปุ่มโหลดข้อมูล
+            document.getElementById('load-data').addEventListener('click', loadData);
+            
+            // เพิ่ม event listener สำหรับปุ่มค้นหา
+            document.getElementById('search-btn').addEventListener('click', filterAircraft);
+            document.getElementById('search').addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    filterAircraft();
+                }
+            });
+            
+            // เพิ่ม event listener สำหรับปุ่มกรอง
+            document.querySelectorAll('.filter-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    filterAircraft();
+                });
+            });
+            
+            // เพิ่ม event listener สำหรับปุ่มเรียงลำดับ
+            document.querySelectorAll('.sort-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    sortAircraft();
+                });
+            });
+        });
+        
+        // ตัวแปรสำหรับเก็บข้อมูลเครื่องบิน
+        let aircraftData = [];
+        
+        // ฟังก์ชันสำหรับโหลดข้อมูล
+        function loadData() {
+            const date = document.getElementById('date').value;
+            const loadingOverlay = document.getElementById('loading');
+            loadingOverlay.style.display = 'flex';
+            
+            // จำลองการโหลดข้อมูลจาก API
+            setTimeout(() => {
+                // ในตัวอย่างนี้เราจะใช้ข้อมูลจำลอง
+                aircraftData = generateSampleData();
+                
+                // โหลดข้อมูลวันถัดไปเพื่อเปรียบเทียบ
+                const nextDate = new Date(date);
+                nextDate.setDate(nextDate.getDate() + 1);
+                const nextDateStr = nextDate.toISOString().split('T')[0];
+                
+                // จำลองข้อมูลวันถัดไป
+                window.nextDayData = generateNextDayData(aircraftData);
+                
+                // แสดงข้อมูล
+                displayAircraft(aircraftData);
+                updateSummary(aircraftData);
+                
+                loadingOverlay.style.display = 'none';
+            }, 1000);
+        }
+        
+        // ฟังก์ชันสำหรับแสดงข้อมูลเครื่องบิน
+        function displayAircraft(data) {
+            const aircraftList = document.getElementById('aircraft-list');
+            aircraftList.innerHTML = '';
+            
+            if (data.length === 0) {
+                aircraftList.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">ไม่พบข้อมูลเครื่องบิน</div>';
+                return;
+            }
+            
+            data.forEach((aircraft, index) => {
+                // สร้างแถวใหม่
+                const row = document.createElement('div');
+                row.className = `dashboard-row ${index % 2 === 0 ? 'even' : 'odd'}`;
+                row.setAttribute('data-status', aircraft.status);
+                
+                // สร้างแถวสำหรับโหมดมือถือ
+                const mainRow = document.createElement('div');
+                mainRow.className = 'mobile-row';
+                
+                // ตรวจสอบว่าเป็นโหมดมือถือหรือไม่
+                if (window.innerWidth <= 767) {
+                    // โหมดมือถือ
+                    
+                    // สร้างหมายเลขเครื่องบิน
+                    const mobileAircraftNumber = document.createElement('div');
+                    mobileAircraftNumber.className = 'aircraft-number';
+                    mobileAircraftNumber.textContent = aircraft.aircraftNumber || '-';
+                    
+                    // ตรวจสอบว่ามีข้อมูลชั่วโมงบินหรือไม่
+                    const mobileHoursDiff = document.createElement('div');
+                    mobileHoursDiff.className = 'hours-diff';
+                    
+                    if (aircraft.remainingHours !== undefined && aircraft.remainingHours !== null && aircraft.remainingHours !== '-') {
+                        // ตรวจสอบว่าเป็นค่าลบหรือไม่
+                        let hoursValue = aircraft.remainingHours;
+                        let isNegative = false;
+                        
+                        if (typeof hoursValue === 'string') {
+                            if (hoursValue.includes(':')) {
+                                // แปลงรูปแบบ HH:MM เป็นตัวเลข
+                                const parts = hoursValue.split(':');
+                                if (parts.length === 2) {
+                                    const hours = parseInt(parts[0]);
+                                    isNegative = hours < 0;
+                                }
+                            } else {
+                                hoursValue = parseFloat(hoursValue);
+                                isNegative = hoursValue < 0;
+                            }
+                        } else {
+                            isNegative = hoursValue < 0;
+                        }
+                        
+                        if (isNegative) {
+                            mobileHoursDiff.style.backgroundColor = 'rgba(255, 59, 48, 0.2)';
+                            mobileHoursDiff.style.color = '#ff3b30';
+                            mobileHoursDiff.style.borderLeft = '3px solid #ff3b30';
+                        } else {
+                            mobileHoursDiff.style.backgroundColor = 'rgba(52, 199, 89, 0.2)';
+                            mobileHoursDiff.style.color = '#34c759';
+                            mobileHoursDiff.style.borderLeft = '3px solid #34c759';
+                        }
+                        mobileHoursDiff.textContent = aircraft.remainingHours;
+                    } else {
+                        mobileHoursDiff.textContent = '-';
+                        mobileHoursDiff.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                        mobileHoursDiff.style.color = '#666';
+                        mobileHoursDiff.style.borderLeft = '3px solid #999';
+                    }
+                    
+                    // ภารกิจ/ฐานที่ตั้ง - แบบกระชับ
+                    const mobileMissionItem = document.createElement('div');
+                    mobileMissionItem.className = 'mission-item';
+                    
+                    const mobileMissionValue = document.createElement('span');
+                    mobileMissionValue.className = 'info-value';
+                    mobileMissionValue.innerHTML = `${aircraft.missionBase || '-'}`;
+                    
+                    mobileMissionItem.appendChild(mobileMissionValue);
+                    
+                    // เพิ่มรายละเอียดลงในแถวหลัก (ในบรรทัดเดียวกัน)
+                    mainRow.appendChild(mobileAircraftNumber);
+                    mainRow.appendChild(mobileMissionItem);
+                    mainRow.appendChild(mobileHoursDiff);
+                    
+                } else {
+                    // โหมดปกติ
+                    
+                    // สร้างข้อมูลเครื่องบิน
+                    const aircraftInfo = document.createElement('div');
+                    aircraftInfo.className = 'aircraft-info';
+                    
+                    // รูปภาพเครื่องบิน
+                    const aircraftImage = document.createElement('img');
+                    aircraftImage.className = 'aircraft-image';
+                    aircraftImage.src = aircraft.image || 'https://via.placeholder.com/50x40?text=Aircraft';
+                    aircraftImage.alt = aircraft.name || 'Aircraft';
+                    aircraftInfo.appendChild(aircraftImage);
+                    
+                    // ชื่อและหมายเลขเครื่องบิน
+                    const nameContainer = document.createElement('div');
+                    nameContainer.className = 'aircraft-name-container';
+                    
+                    const aircraftName = document.createElement('div');
+                    aircraftName.className = 'aircraft-name';
+                    aircraftName.textContent = aircraft.name || '-';
+                    nameContainer.appendChild(aircraftName);
+                    
+                    const aircraftNumber = document.createElement('div');
+                    aircraftNumber.className = 'aircraft-number';
+                    aircraftNumber.textContent = aircraft.aircraftNumber || '-';
+                    nameContainer.appendChild(aircraftNumber);
+                    
+                    aircraftInfo.appendChild(nameContainer);
+                    
+                    // สถานะเครื่องบิน
+                    const statusIndicator = document.createElement('span');
+                    statusIndicator.className = `status-indicator ${aircraft.status === 'yes' ? 'status-available' : 'status-unavailable'}`;
+                    statusIndicator.innerHTML = aircraft.status === 'yes' ? 
+                        '<i class="fas fa-check-circle"></i> พร้อมใช้งาน' : 
+                        '<i class="fas fa-times-circle"></i> ไม่พร้อมใช้งาน';
+                    aircraftInfo.appendChild(statusIndicator);
+                    
+                    // เพิ่มข้อมูลเครื่องบินลงในแถว
+                    mainRow.appendChild(aircraftInfo);
+                    
+                    // สร้างรายละเอียดเครื่องบิน
+                    const aircraftDetails = document.createElement('div');
+                    aircraftDetails.className = 'aircraft-details';
+                    
+                    // ภารกิจ/ฐานที่ตั้ง
+                    const missionItem = document.createElement('div');
+                    missionItem.className = 'info-item mission-item';
+                    missionItem.innerHTML = `<span class="info-label">ภารกิจ:</span> <span class="info-value">${aircraft.missionBase || '-'}</span>`;
+                    aircraftDetails.appendChild(missionItem);
+                    
+                    // ชั่วโมงบินคงเหลือ
+                    const hoursItem = document.createElement('div');
+                    hoursItem.className = 'info-item hours-item';
+                    
+                    // ตรวจสอบว่ามีข้อมูลวันถัดไปหรือไม่
+                    if (window.nextDayData && window.nextDayData.length > 0) {
+                        // หาข้อมูลเครื่องบินลำเดียวกันในวันถัดไป
+                        const nextDayAircraft = window.nextDayData.find(item => 
+                            item.aircraftNumber === aircraft.aircraftNumber && 
+                            item.name === aircraft.name);
+                        
+                        if (nextDayAircraft) {
+                            // คำนวณผลต่างของชั่วโมงบิน
+                            let hoursDiff = '';
+                            let diffDisplay = '';
+                            
+                            // ตรวจสอบว่ามีข้อมูลชั่วโมงบินทั้งสองวันหรือไม่
+                            if (aircraft.remainingHours && nextDayAircraft.remainingHours && 
+                                aircraft.remainingHours !== '-' && nextDayAircraft.remainingHours !== '-') {
+                                
+                                // ตรวจสอบว่าเป็นเครื่องบิน SKA-350 หรือไม่
+                                let isSKA = false;
+                                if (aircraft.name) {
+                                    const nameStr = String(aircraft.name);
+                                    if (nameStr.includes('SKA-350') || nameStr.includes('SKA350') || nameStr.includes('SKA')) {
+                                        isSKA = true;
+                                    }
+                                }
+                                
+                                if (isSKA) {
+                                    try {
+                                        // แปลงข้อมูลเป็นตัวเลขทศนิยม
+                                        let current = 0;
+                                        let nextDay = 0;
+                                        
+                                        try {
+                                            // Handle different formats safely
+                                            if (typeof aircraft.remainingHours === 'string') {
+                                                current = parseFloat(aircraft.remainingHours.replace(':', '.')) || 0;
+                                            } else if (typeof aircraft.remainingHours === 'number') {
+                                                current = aircraft.remainingHours;
+                                            }
+                                            
+                                            if (typeof nextDayAircraft.remainingHours === 'string') {
+                                                nextDay = parseFloat(nextDayAircraft.remainingHours.replace(':', '.')) || 0;
+                                            } else if (typeof nextDayAircraft.remainingHours === 'number') {
+                                                nextDay = nextDayAircraft.remainingHours;
+                                            }
+                                        } catch (e) {
+                                            console.error('Error parsing hours:', e);
+                                        }
+                                        
+                                        // คำนวณผลต่าง
+                                        const diff = nextDay - current;
+                                        
+                                        if (diff !== 0) {
+                                            // แสดงผลต่างในรูปแบบทศนิยม 1 ตำแหน่ง
+                                            const diffAbs = Math.abs(diff).toFixed(1);
+                                            const sign = diff > 0 ? '+' : '-';
+                                            diffDisplay = `<span class="hours-diff ${diff > 0 ? 'positive' : 'negative'}">${sign}${diffAbs}</span>`;
+                                        }
+                                    } catch (error) {
+                                        console.error('เกิดข้อผิดพลาดในการคำนวณสำหรับ SKA-350:', error);
+                                    }
+                                } else {
+                                    try {
+                                        function timeToMinutes(timeStr) {
+                                            if (!timeStr || timeStr === '-') return 0;
+                                            
+                                            // แปลงรูปแบบ HH:MM เป็นนาที
+                                            const parts = timeStr.split(':');
+                                            if (parts.length === 2) {
+                                                const hours = parseInt(parts[0]);
+                                                const minutes = parseInt(parts[1]);
+                                                if (!isNaN(hours) && !isNaN(minutes)) {
+                                                    return hours * 60 + minutes;
+                                                }
+                                            }
+                                            return 0;
+                                        }
+                                        
+                                        function minutesToTime(minutes) {
+                                            if (isNaN(minutes)) {
+                                                return "0:00";
+                                            }
+                                            const hours = Math.floor(Math.abs(minutes) / 60);
+                                            const mins = Math.abs(minutes) % 60;
+                                            return `${hours}:${mins.toString().padStart(2, '0')}`;
+                                        }
+                                        
+                                        const currentMinutes = timeToMinutes(aircraft.remainingHours);
+                                        const nextDayMinutes = timeToMinutes(nextDayAircraft.remainingHours);
+                                        const diffMinutes = currentMinutes - nextDayMinutes;
+                                        
+                                        if (diffMinutes !== 0) {
+                                            hoursDiff = minutesToTime(diffMinutes);
+                                            const sign = diffMinutes > 0 ? '-' : '+';
+                                            diffDisplay = `<span class="hours-diff ${diffMinutes > 0 ? 'negative' : 'positive'}">${sign}${hoursDiff}</span>`;
+                                        }
+                                    } catch (error) {
+                                        console.error('เกิดข้อผิดพลาดในการคำนวณชั่วโมงบิน:', error);
+                                    }
+                                }
+                            }
+                            
+                            hoursItem.innerHTML = `<span class="info-label">ชั่วโมงบินคงเหลือ:</span> <span class="info-value">${aircraft.remainingHours || '-'} ${diffDisplay}</span>`;
+                        } else {
+                            hoursItem.innerHTML = `<span class="info-label">ชั่วโมงบินคงเหลือ:</span> <span class="info-value">${aircraft.remainingHours || '-'}</span>`;
+                        }
+                    } else {
+                        hoursItem.innerHTML = `<span class="info-label">ชั่วโมงบินคงเหลือ:</span> <span class="info-value">${aircraft.remainingHours || '-'}</span>`;
+                    }
+                    
+                    aircraftDetails.appendChild(hoursItem);
+                    
+                    // เพิ่มรายละเอียดลงในแถว
+                    mainRow.appendChild(aircraftDetails);
+                }
+                
+                // เพิ่มแถวหลักลงในแถวหลัก
+                row.appendChild(mainRow);
+                
+                // เพิ่มแถวลงในรายการ
+                aircraftList.appendChild(row);
+            });
+        }
+        
+        // ฟังก์ชันสำหรับอัปเดตสรุปข้อมูล
+        function updateSummary(data) {
+            const totalCount = data.length;
+            const availableCount = data.filter(aircraft => aircraft.status === 'yes').length;
+            const unavailableCount = data.filter(aircraft => aircraft.status === 'no').length;
+            
+            document.getElementById('total-count').textContent = totalCount;
+            document.getElementById('available-count').textContent = availableCount;
+            document.getElementById('unavailable-count').textContent = unavailableCount;
+        }
+        
+        // ฟังก์ชันสำหรับกรองข้อมูลเครื่องบิน
+        function filterAircraft() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const filterType = document.querySelector('.filter-btn.active').getAttribute('data-filter');
+            
+            let filteredData = [...aircraftData];
+            
+            // กรองตามสถานะ
+            if (filterType !== 'all') {
+                filteredData = filteredData.filter(aircraft => aircraft.status === filterType);
+            }
+            
+            // กรองตามคำค้นหา
+            if (searchTerm) {
+                filteredData = filteredData.filter(aircraft => {
+                    return (
+                        (aircraft.name && aircraft.name.toLowerCase().includes(searchTerm)) ||
+                        (aircraft.aircraftNumber && aircraft.aircraftNumber.toLowerCase().includes(searchTerm)) ||
+                        (aircraft.missionBase && aircraft.missionBase.toLowerCase().includes(searchTerm))
+                    );
+                });
+            }
+            
+            // แสดงผลลัพธ์
+            displayAircraft(filteredData);
+            updateSummary(filteredData);
+        }
+        
+        // ฟังก์ชันสำหรับเรียงลำดับข้อมูลเครื่องบิน
+        function sortAircraft() {
+            const sortType = document.querySelector('.sort-btn.active').getAttribute('data-sort');
+            const filterType = document.querySelector('.filter-btn.active').getAttribute('data-filter');
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            
+            let filteredData = [...aircraftData];
+            
+            // กรองตามสถานะ
+            if (filterType !== 'all') {
+                filteredData = filteredData.filter(aircraft => aircraft.status === filterType);
+            }
+            
+            // กรองตามคำค้นหา
+            if (searchTerm) {
+                filteredData = filteredData.filter(aircraft => {
+                    return (
+                        (aircraft.name && aircraft.name.toLowerCase().includes(searchTerm)) ||
+                        (aircraft.aircraftNumber && aircraft.aircraftNumber.toLowerCase().includes(searchTerm)) ||
+                        (aircraft.missionBase && aircraft.missionBase.toLowerCase().includes(searchTerm))
+                    );
+                });
+            }
+            
+            // เรียงลำดับ
+            switch (sortType) {
+                case 'name':
+                    filteredData.sort((a, b) => {
+                        const nameA = a.name || '';
+                        const nameB = b.name || '';
+                        return nameA.localeCompare(nameB);
+                    });
+                    break;
+                case 'hours':
+                    filteredData.sort((a, b) => {
+                        // แปลงชั่วโมงบินเป็นตัวเลขเพื่อเปรียบเทียบ
+                        function parseHours(hours) {
+                            if (!hours || hours === '-') return -Infinity;
+                            
+                            if (typeof hours === 'string' && hours.includes(':')) {
+                                const parts = hours.split(':');
+                                if (parts.length === 2) {
+                                    const h = parseInt(parts[0]);
+                                    const m = parseInt(parts[1]);
+                                    if (!isNaN(h) && !isNaN(m)) {
+                                        return h + (m / 60);
+                                    }
+                                }
+                            }
+                            
+                            return parseFloat(hours) || -Infinity;
+                        }
+                        
+                        return parseHours(b.remainingHours) - parseHours(a.remainingHours);
+                    });
+                    break;
+                case 'status':
+                    filteredData.sort((a, b) => {
+                        // เรียงตามสถานะ: พร้อมใช้งานก่อน, ไม่พร้อมใช้งานทีหลัง
+                        if (a.status === 'yes' && b.status !== 'yes') return -1;
+                        if (a.status !== 'yes' && b.status === 'yes') return 1;
+                        return 0;
+                    });
+                    break;
+            }
+            
+            // แสดงผลลัพธ์
+            displayAircraft(filteredData);
+        }
+        
+        // ฟังก์ชันสำหรับสร้างข้อมูลจำลอง
+        function generateSampleData() {
+            const aircraftTypes = [
+                { name: 'Cessna 172', image: 'https://via.placeholder.com/50x40?text=C172' },
+                { name: 'Piper PA-28', image: 'https://via.placeholder.com/50x40?text=PA28' },
+                { name: 'Diamond DA40', image: 'https://via.placeholder.com/50x40?text=DA40' },
+                { name: 'Cirrus SR22', image: 'https://via.placeholder.com/50x40?text=SR22' },
+                { name: 'Beechcraft Bonanza', image: 'https://via.placeholder.com/50x40?text=BE36' },
+                { name: 'SKA-350', image: 'https://via.placeholder.com/50x40?text=SKA' }
+            ];
+            
+            const missions = [
+                'ฝึกบิน',
+                'ลาดตระเวน',
+                'ขนส่ง',
+                'ฝึกซ้อม',
+                'ตรวจการณ์',
+                'ภารกิจพิเศษ'
+            ];
+            
+            const bases = [
+                'กรุงเทพฯ',
+                'เชียงใหม่',
+                'ภูเก็ต',
+                'อุดรธานี',
+                'สงขลา',
+                'ขอนแก่น'
+            ];
+            
+            const data = [];
+            
+            // สร้างข้อมูลจำลอง 20 รายการ
+            for (let i = 1; i <= 20; i++) {
+                const aircraftType = aircraftTypes[Math.floor(Math.random() * aircraftTypes.length)];
+                const mission = missions[Math.floor(Math.random() * missions.length)];
+                const base = bases[Math.floor(Math.random() * bases.length)];
+                
+                // สร้างชั่วโมงบินแบบสุ่ม
+                let remainingHours;
+                if (aircraftType.name === 'SKA-350') {
+                    // สำหรับ SKA-350 ใช้รูปแบบทศนิยม
+                    remainingHours = (Math.random() * 200 - 20).toFixed(1);
+                } else {
+                    // สำหรับเครื่องบินอื่นๆ ใช้รูปแบบ HH:MM
+                    const hours = Math.floor(Math.random() * 100 - 10);
+                    const minutes = Math.floor(Math.random() * 60);
+                    remainingHours = `${hours}:${minutes.toString().padStart(2, '0')}`;
+                }
+                
+                // กำหนดสถานะตามชั่วโมงบิน
+                let status;
+                if (aircraftType.name === 'SKA-350') {
+                    status = parseFloat(remainingHours) > 0 ? 'yes' : 'no';
+                } else {
+                    const parts = remainingHours.split(':');
+                    const hours = parseInt(parts[0]);
+                    status = hours > 0 ? 'yes' : 'no';
+                }
+                
+                data.push({
+                    name: aircraftType.name,
+                    aircraftNumber: `HS-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+                    image: aircraftType.image,
+                    missionBase: `${mission} (${base})`,
+                    remainingHours: remainingHours,
+                    status: status
+                });
+            }
+            
+            return data;
+        }
+        
+        // ฟังก์ชันสำหรับสร้างข้อมูลจำลองของวันถัดไป
+        function generateNextDayData(currentData) {
+            return currentData.map(aircraft => {
+                // คัดลอกข้อมูลเดิม
+                const nextDayAircraft = { ...aircraft };
+                
+                // ปรับชั่วโมงบิน
+                if (aircraft.name === 'SKA-350') {
+                    // สำหรับ SKA-350 ลดลง 0.5-2.0 ชั่วโมง
+                    const currentHours = parseFloat(aircraft.remainingHours);
+                    const reduction = 0.5 + Math.random() * 1.5;
+                    nextDayAircraft.remainingHours = (currentHours - reduction).toFixed(1);
+                } else {
+                    // สำหรับเครื่องบินอื่นๆ ลดลง 0:30-2:00 ชั่วโมง
+                    const parts = aircraft.remainingHours.split(':');
+                    let hours = parseInt(parts[0]);
+                    let minutes = parseInt(parts[1]);
+                    
+                    // ลดลง 30-120 นาที
+                    const reductionMinutes = 30 + Math.floor(Math.random() * 90);
+                    
+                    // คำนวณเวลาใหม่
+                    let totalMinutes = hours * 60 + minutes - reductionMinutes;
+                    hours = Math.floor(totalMinutes / 60);
+                    minutes = totalMinutes % 60;
+                    
+                    nextDayAircraft.remainingHours = `${hours}:${minutes.toString().padStart(2, '0')}`;
+                }
+                
+                // ปรับสถานะตามชั่วโมงบิน
+                if (aircraft.name === 'SKA-350') {
+                    nextDayAircraft.status = parseFloat(nextDayAircraft.remainingHours) > 0 ? 'yes' : 'no';
+                } else {
+                    const parts = nextDayAircraft.remainingHours.split(':');
+                    const hours = parseInt(parts[0]);
+                    nextDayAircraft.status = hours > 0 ? 'yes' : 'no';
+                }
+                
+                return nextDayAircraft;
+            });
+        }
+    </script>
+</body>
+</html>

@@ -690,14 +690,14 @@ function updateStatusSummary(availableCount, unavailableCount) {
 
     if (availableElement) {
         availableElement.setAttribute('data-count', availableCount);
-        const countText = availableElement.previousElementSibling.querySelector('.count-text');
-        if (countText) countText.textContent = `(${availableCount})`;
+        // อัปเดตตัวเลขในแบดจ์โดยตรง
+        availableElement.textContent = availableCount;
     }
 
     if (unavailableElement) {
         unavailableElement.setAttribute('data-count', unavailableCount);
-        const countText = unavailableElement.previousElementSibling.querySelector('.count-text');
-        if (countText) countText.textContent = `(${unavailableCount})`;
+        // อัปเดตตัวเลขในแบดจ์โดยตรง
+        unavailableElement.textContent = unavailableCount;
     }
 }
 
@@ -780,6 +780,111 @@ const provinceCoordinates = {
 
 
 
+// ฟังก์ชันสำหรับดึงข้อมูลทุกวันที่และเก็บไว้ใน cache
+async function prefetchAllDates() {
+    console.log("🔄 เริ่มต้นการดึงข้อมูลทุกวันที่เพื่อเก็บใน cache...");
+    try {
+        const sheetID = "1_M74Pe_4uul0fkcEea8AMxQIMcPznNZ9ttCqvbeQgBs";
+        const aircraftSheetGID = "705816349";
+        const allDatesKey = 'allCachedDates';
+
+        // ตรวจสอบว่ามีรายการวันที่ที่มีใน cache หรือไม่
+        let cachedDates = [];
+        const cachedDatesStr = localStorage.getItem(allDatesKey);
+        if (cachedDatesStr) {
+            try {
+                cachedDates = JSON.parse(cachedDatesStr);
+                console.log(`📋 พบรายการวันที่ที่มีใน cache จำนวน ${cachedDates.length} วันที่`);
+            } catch (e) {
+                console.error("❌ ไม่สามารถแปลงข้อมูลรายการวันที่ได้:", e);
+            }
+        }
+
+        // URL สำหรับดึงข้อมูลทั้งหมด
+        const aircraftURL = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&gid=${aircraftSheetGID}`;
+
+        // ดึงข้อมูลทั้งหมด
+        console.log("📡 กำลังดึงข้อมูลวันที่ทั้งหมดจาก Google Sheets...");
+        const response = await fetch(aircraftURL, {
+            cache: 'no-store', // ไม่ใช้ cache ของ browser
+            headers: { 'Cache-Control': 'no-cache' }
+        });
+        const text = await response.text();
+        const json = JSON.parse(text.substring(47, text.length - 2));
+
+        // ตรวจสอบว่ามีข้อมูลหรือไม่
+        if (json && json.table && json.table.rows && json.table.rows.length > 0) {
+            console.log(`📊 ดึงข้อมูลจาก Google Sheets สำเร็จ จำนวน ${json.table.rows.length} แถว`);
+
+            // รายการวันที่ที่พบ
+            const foundDates = [];
+            const datesToFetch = [];
+
+            // วนลูปตรวจสอบทุกแถว
+            for (let i = 0; i < json.table.rows.length; i++) {
+                const row = json.table.rows[i];
+
+                // ตรวจสอบว่ามีข้อมูลในคอลัมน์ A (วันที่) หรือไม่
+                if (row.c && row.c[0] && row.c[0].v) {
+                    // ดึงค่าวันที่จากคอลัมน์ A
+                    let rowDate = row.c[0].v;
+                    let formattedDate = "";
+
+                    // แปลงวันที่ให้เป็นรูปแบบ YYYY-MM-DD
+                    if (rowDate instanceof Date) {
+                        const year = rowDate.getFullYear();
+                        const month = String(rowDate.getMonth() + 1).padStart(2, '0');
+                        const day = String(rowDate.getDate()).padStart(2, '0');
+                        formattedDate = `${year}-${month}-${day}`;
+                    } else if (typeof rowDate === 'string') {
+                        // แปลงรูปแบบวันที่ต่างๆ เป็น YYYY-MM-DD
+                        if (rowDate.includes('/')) {
+                            const parts = rowDate.split('/');
+                            if (parts.length === 3) {
+                                const day = parts[0].padStart(2, '0');
+                                const month = parts[1].padStart(2, '0');
+                                let year = parts[2];
+                                if (year.length === 2) year = `20${year}`;
+                                formattedDate = `${year}-${month}-${day}`;
+                            }
+                        } else if (rowDate.includes('-')) {
+                            const parts = rowDate.split('-');
+                            if (parts.length === 3) {
+                                if (parts[0].length === 4) {
+                                    // เป็นรูปแบบ YYYY-MM-DD อยู่แล้ว
+                                    formattedDate = rowDate;
+                                } else {
+                                    // อาจเป็นรูปแบบ DD-MM-YYYY
+                                    const day = parts[0].padStart(2, '0');
+                                    const month = parts[1].padStart(2, '0');
+                                    let year = parts[2];
+                                    if (year.length === 2) year = `20${year}`;
+                                    formattedDate = `${year}-${month}-${day}`;
+                                }
+                            }
+                        }
+                    }
+
+                    // ถ้าสามารถแปลงวันที่ได้ และยังไม่มีในรายการ
+                    if (formattedDate && !foundDates.includes(formattedDate)) {
+                        foundDates.push(formattedDate);
+                    }
+                }
+            }
+
+            // อัปเดต cache
+            localStorage.setItem(allDatesKey, JSON.stringify(foundDates));
+            console.log(`✅ อัปเดต cache สำเร็จ: ${foundDates.length} วันที่`);
+        } else {
+            console.warn("⚠️ ไม่พบข้อมูลใน Google Sheets");
+        }
+    } catch (error) {
+        console.error("❌ เกิดข้อผิดพลาดในการดึงข้อมูล:", error);
+    }
+}
+
+// เรียกใช้ฟังก์ชัน
+prefetchAllDates();
 const aircraftImages = {
     "SKA-350": "https://www.royalrain.go.th/royalrain/IMG/content/archive/1_SuperKingAir350(SKA350).jpg",
     "CN-235": "https://www.royalrain.go.th/royalrain/IMG/content/archive/2_CN_235-220.jpg",
@@ -3448,8 +3553,12 @@ window.updateAircraftList = function(flights = flightData) {
     generateAircraftList(flights);
     
     // อัปเดตสถานะสรุป
-    const availableCount = flights.filter(flight => flight.status === "yes").length;
-    const unavailableCount = flights.filter(flight => flight.status === "no").length;
+    const availableCount = flights.filter(flight => 
+        flight.status && typeof flight.status === 'string' && flight.status.toLowerCase() === "yes"
+    ).length;
+    const unavailableCount = flights.filter(flight => 
+        !flight.status || typeof flight.status !== 'string' || flight.status.toLowerCase() !== "yes"
+    ).length;
     updateStatusSummary(availableCount, unavailableCount);
     
     return flights;
